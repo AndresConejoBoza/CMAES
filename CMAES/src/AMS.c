@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-
+/*
 
 void AMS_taskFunction(AMSparameter* parameter, void* pvParameters, sysVars* env) {
+	printf("\nEntre a AMS task function\n");
 	AMSparameter* amsParameters = (AMSparameter*)pvParameters;
 	Agent_Platform* services = amsParameters->services;
 	USER_DEF_COND* cond = amsParameters->cond;
@@ -155,3 +156,4 @@ void AMS_taskFunction(AMSparameter* parameter, void* pvParameters, sysVars* env)
 void ConstructorAMS(AMSparameter* parameter) {
 	parameter->AMS_task = &AMS_taskFunction;
 };
+*/

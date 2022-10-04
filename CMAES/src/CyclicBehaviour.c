@@ -4,9 +4,9 @@
 #include <stdbool.h>
 
 
-void CreateCyclicBehaviourFunction(CyclicBehaviour* Behaviour) {
+//void CreateCyclicBehaviourFunction(CyclicBehaviour* Behaviour) {
 	//No tiene nada
-};
+//};
 
 void actionFunction(CyclicBehaviour* Behaviour) {
 	// Según la programación original, asignaba un =0
@@ -47,7 +47,7 @@ void executeFunction(CyclicBehaviour* Behaviour) {
 
 
 void ConstructorCyclicBehaviour(CyclicBehaviour* Behaviour) {
-	Behaviour->CreateCyclicBehaviour = &CreateCyclicBehaviourFunction;
+	//Behaviour->CreateCyclicBehaviour = &CreateCyclicBehaviourFunction;
 	Behaviour->action = &actionFunction;
 	Behaviour->setup = &setupFunction;
 	Behaviour->done = &doneFunction;

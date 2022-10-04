@@ -3,6 +3,154 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+void AMS_taskFunction(void* pvParameters) {
+	printf("\nEntre a AMS task function\n");
+	AMSparameter* amsParameters = (AMSparameter*)pvParameters;
+	Agent_Platform* services = amsParameters->services;
+	USER_DEF_COND* cond = amsParameters->cond;
+	Agent_Msg msg;
+	printf("\nEl valor del puntero hacia el env es: %p\n", &amsParameters->ptr_env);
+	InicializadorAgent_Msg(&msg, amsParameters->ptr_env);
+	msg.Agent_Msg(&msg);
+	printf("\nUUUUUUUUUEl valor del puntero hacia el env en MSG es: %p\n", &msg.ptr_env);
+	//printf("\nUUUUUUUUUEl valor del puntero hacia el env en MSG es: %s\n", msg.ptr_env);
+	MAESUBaseType_t error_msg = 0;
+	for (;;)
+	{
+		msg.receive(&msg, portMAX_DELAY);
+		if (msg.get_msg_type(&msg) == REQUEST)
+		{
+			if (strcmp(msg.get_msg_content(&msg), "KILL") == 0)
+			{
+				if (cond->kill_cond(cond))
+				{
+					error_msg = services->kill_agent(services, msg.get_target_agent(&msg));
+					if (error_msg == NO_ERRORS)
+					{
+						msg.set_msg_type(&msg, CONFIRM);
+					}
+					else
+					{
+						msg.set_msg_type(&msg, REFUSE);
+					}
+				}
+				else
+				{
+					msg.set_msg_type(&msg, REFUSE);
+				}
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			} //KILL Case
+
+			else if (strcmp(msg.get_msg_content(&msg), "REGISTER") == 0)
+			{
+				if (cond->register_cond(cond))
+				{
+					error_msg = services->register_agent(services, msg.get_target_agent(&msg));
+					if (error_msg == NO_ERRORS)
+					{
+						msg.set_msg_type(&msg, CONFIRM);
+					}
+					else
+					{
+						msg.set_msg_type(&msg, REFUSE);
+					}
+				}
+				else
+				{
+					msg.set_msg_type(&msg, REFUSE);
+				}
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			} //REGISTER Case
+
+			else if (strcmp(msg.get_msg_content(&msg), "DEREGISTER") == 0)
+			{
+				if (cond->deregister_cond(cond))
+				{
+					error_msg = services->deregister_agent(services, msg.get_target_agent(&msg));
+					if (error_msg == NO_ERRORS)
+					{
+						msg.set_msg_type(&msg, CONFIRM);
+					}
+					else
+					{
+						msg.set_msg_type(&msg, REFUSE);
+					}
+				}
+				else
+				{
+					msg.set_msg_type(&msg, REFUSE);
+				}
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			} //DEREGISTER Case
+
+			else if (strcmp(msg.get_msg_content(&msg), "SUSPEND") == 0)
+			{
+				if (cond->suspend_cond(cond))
+				{
+					error_msg = services->suspend_agent(services, msg.get_target_agent(&msg));
+					if (error_msg == NO_ERRORS)
+					{
+						msg.set_msg_type(&msg, CONFIRM);
+					}
+					else
+					{
+						msg.set_msg_type(&msg, REFUSE);
+					}
+				}
+				else
+				{
+					msg.set_msg_type(&msg, REFUSE);
+				}
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			} //SUSPEND Case
+
+			else if (strcmp(msg.get_msg_content(&msg), "RESUME") == 0)
+			{
+				if (cond->resume_cond(cond))
+				{
+					error_msg = services->resume_agent(services, msg.get_target_agent(&msg));
+					if (error_msg == NO_ERRORS)
+					{
+						msg.set_msg_type(&msg, CONFIRM);
+					}
+					else
+					{
+						msg.set_msg_type(&msg, REFUSE);
+					}
+				}
+				else
+				{
+					msg.set_msg_type(&msg, REFUSE);
+				}
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			} //RESUME Case
+
+			else if (strcmp(msg.get_msg_content(&msg), "RESTART") == 0)
+			{
+				if (cond->restart_cond(cond))
+				{
+					services->restart(services, msg.get_target_agent(&msg));
+				}
+				else
+				{
+					msg.set_msg_type(&msg, REFUSE);
+				}
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			} //RESTART Case
+
+			else
+			{
+				msg.set_msg_type(&msg, NOT_UNDERSTOOD);
+				msg.send(&msg, msg.get_sender(&msg), 0);
+			}
+		} //end if
+		else
+		{
+			msg.set_msg_type(&msg, NOT_UNDERSTOOD);
+			msg.send(&msg, msg.get_sender(&msg), 0);
+		}
+	} // end while
+};
 
 void Agent_PlatformFunction(Agent_Platform* platform, const char* name) {
 	platform->agentAMS.agent.agent_name = name;
@@ -27,35 +175,46 @@ void Agent_PlatformWithCondFunction(Agent_Platform* platform, const char* name, 
 	}
 };
 
-static AMSparameter parameters;
+
+
 
 bool bootFunction(Agent_Platform* platform) {
+	//printf("\n Entre a la funcion de boot\n");
+
 	if (xTaskGetCurrentTaskHandle() == NULL)
 	{
-		AMSparameter* parametersForTask = &parameters;
-
+		//printf("\nSí entró a la condición de xtaskgetcurrenttaskhandle!=NULL\n");
+		//ConstructorAMS(&parameters);
 		// Mailbox = Queue
+
+		ConstructorAgente(&platform->agentAMS);
+		platform->agentAMS.Iniciador(&platform->agentAMS, "AMSAgent", (configMAX_PRIORITIES - 1), 1024);
 
 		platform->agentAMS.agent.mailbox_handle = xQueueCreate(1, sizeof(MsgObj));
 
 		// Task
-		parametersForTask->services = platform; //Esto era = this. Según entendí, esto hace referencia a esta misma instancia. 
-		parametersForTask->cond = platform->ptr_cond;
+		AMSparameter parametersForTask;
+		parametersForTask.ptr_env = platform->ptr_env;
+		parametersForTask.services = platform; //Esto era = this. Según entendí, esto hace referencia a esta misma instancia. 
+		parametersForTask.cond = platform->ptr_cond;
 		platform->agentAMS.resources.stackSize = configMINIMAL_STACK_SIZE; /*--------------------------------------------------------*/
-
-		xTaskCreate(parametersForTask->AMS_task, platform->agentAMS.agent.agent_name, platform->agentAMS.resources.stackSize, (void*)parametersForTask, (configMAX_PRIORITIES - 1), &platform->agentAMS.agent.aid);
-
-		
+		//printf("\n Llegue al xtaskcreate\n");
+		//printf("\n Dirección donde está apuntando la función de parametersfortask: %p\n", &AMS_taskFunction);
+		//printf("\WWWWWWWAID de la task: %s\n", platform->agentAMS.agent.aid);
+		printf("\nEste es el valor del ptr_env enviado a la task de AMS: %p",&parametersForTask.ptr_env);
+		xTaskCreate(AMS_taskFunction, platform->agentAMS.agent.agent_name, platform->agentAMS.resources.stackSize, (void*)&parametersForTask, (configMAX_PRIORITIES - 1), &platform->agentAMS.agent.aid);
+		//printf("\n Logre pasar el xtaskcreate\n");
+		//printf("\WWWWWWWAID de la task: %s\n", platform->agentAMS.agent.aid);
 		platform->description.AMS_AID = platform->agentAMS.agent.aid;
 		platform->ptr_env->set_TaskEnv(platform->ptr_env,platform->agentAMS.agent.aid, &platform->agentAMS);
-
+		//printf("\nLlegue al platform->agentAMS.agent.aid != NULL\n");
 		if (platform->agentAMS.agent.aid != NULL)
 		{
 			sysVar* element;
-			UBaseType_t i = 0;
+			MAESUBaseType_t i = 0;
 
 			while (i < AGENT_LIST_SIZE) {
-
+				printf("\nValor de i dentro del ciclo de AP boot: %i\n", i);
 				element = platform->ptr_env->getEnv(platform->ptr_env);
 
 				if ((element[i].first == NULL) || (platform->agentAMS.agent.aid == NULL))
@@ -69,31 +228,34 @@ bool bootFunction(Agent_Platform* platform) {
 		}
 		else
 		{
+			printf("\n Tiró system abort\n");
 			/* System_abort */
 			return INVALID;
 		}
 	}
 	else
 	{
+		printf("\n Tiró system invalid\n");
 		return INVALID;
 	}
 };
 
-void agent_initFunction(Agent_Platform* platform, MAESAgent* agent, void behaviour(void* pvParameters)) {
+void agent_initFunction(Agent_Platform* platform, MAESAgent* agent, void* behaviour) {
 	if (xTaskGetCurrentTaskHandle() == 0)
 	{
 		// Mailbox
 		agent->agent.mailbox_handle = xQueueCreate(1, sizeof(MsgObj));
-
+		printf("\n agarre el xqueuecreate\n");
 		// Task
-		agent->resources.function = behaviour;
+		agent->resources.function = &behaviour;
 		agent->resources.taskParameters = NULL;
 
-
-		xTaskCreate(behaviour, agent->agent.agent_name, agent->resources.stackSize, agent->resources.taskParameters, 0, &agent->agent.aid);
-
-		
+		//printf("\nAAAAACual es el valor del aid de Agent Sender?: %s\n", agent->agent.aid);
+		xTaskCreate(behaviour, agent->agent.agent_name, agent->resources.stackSize, (void*)behaviour, 0, &agent->agent.aid);
+		printf("\nse supone que aqui cree un task\n");
+		printf("\nEste es el aid que se está guardando: %s\n", agent->agent.agent_name);
 		platform->ptr_env->set_TaskEnv(platform->ptr_env,agent->agent.aid, agent);
+		//printf("\nCual es el valor del aid de Agent Sender?: %s\n", agent->agent.aid);
 		vTaskSuspend(agent->agent.aid);
 	}
 };
@@ -183,9 +345,12 @@ AP_Description get_AP_descriptionFunction(Agent_Platform* platform) {
 };
 
 ERROR_CODE register_agentFunction(Agent_Platform* platform, Agent_AID aid) {
+	printf("\nEntre a register agent\n");
 	if (aid == NULL)
 	{
+		printf("\nMe tiró Handle-null\n");
 		return HANDLE_NULL;
+		
 	}
 	else if (xTaskGetCurrentTaskHandle() == NULL || uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -195,25 +360,32 @@ ERROR_CODE register_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 			{
 				MAESAgent* a;
 				a = platform->ptr_env->get_taskEnv(platform->ptr_env, aid);
+				printf("el nombre del agente sacado es: %s", a->agent.agent_name); //Todo funciona bien por el momento. Me sacó agent sender, receiver y uno NULL
 				a->agent.AP = platform->agentAMS.agent.aid;
 				platform->Agent_Handle[platform->description.subscribers] = aid;
 				platform->description.subscribers++;
+				printf("El nombre del agente es %s y la prioridad asignada es de: %i", a->agent.agent_name, a->agent.priority);
 				vTaskPrioritySet(aid, a->agent.priority);
+				//printf("El nombre del agente es %s y la prioridad asignada es de: %i", a->agent.agent_name, a->agent.priority);
+				printf("PASE EL VTASKPRIORITY");
 				vTaskResume(aid);
 				return NO_ERRORS;
 			}
 			else
 			{
+				printf("\nList FUll\n");
 				return LIST_FULL;
 			}
 		}
 		else
 		{
+			printf("\nDuplicated\n");
 			return DUPLICATED;
 		}
 	}
 	else
 	{
+		printf("\nInvalid\n");
 		return INVALID;
 	}
 };
@@ -349,6 +521,8 @@ void restartFunction(Agent_Platform* platform, Agent_AID aid) {
 		platform->ptr_env->set_TaskEnv(platform->ptr_env,a->agent.aid, a);
 	}
 };
+
+
 
 
 

@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void CreateOneShotBehaviourFunction(OneShotBehaviour* Behaviour) {
+//void CreateOneShotBehaviourFunction(OneShotBehaviour* Behaviour) {
 	//No tiene nada
-};
+//};
 
 void actionFunctionOSB(OneShotBehaviour* Behaviour) {
 	//Según la programación original, se le asignaba =0
@@ -46,7 +46,7 @@ void executeFunctionOSB(OneShotBehaviour* Behaviour) {
 
 
 void ConstructorOneShotBehaviour(OneShotBehaviour* Behaviour) {
-	Behaviour->CreateOneShotBehaviour = &CreateOneShotBehaviourFunction;
+	//Behaviour->CreateOneShotBehaviour = &CreateOneShotBehaviourFunction;
 	Behaviour->action = &actionFunctionOSB;
 	Behaviour->setup = &setupFunctionOSB;
 	Behaviour->done = &doneFunctionOSB;

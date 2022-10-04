@@ -40,5 +40,4 @@ void ConstructorUSER_DEF_COND(USER_DEF_COND* cond) {
     cond->suspend_cond = &suspend_condFunction;
     cond->resume_cond = &resume_condFunction;
     cond->restart_cond = &restart_condFunction;
-
 };

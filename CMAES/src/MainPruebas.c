@@ -15,9 +15,9 @@ void iniciadores(MAESAgent* agenteainiciar) {
 	agenteainiciar->Iniciador = MAESAgent1();
 	//agenteainiciar.AID = AID0();
 }
-*/
 
-/*
+
+
 MAESAgent* CreateAgent(const char* name, MAESUBaseType_t pri, uint16_t sizeStack) {
 	MAESAgent* New = calloc(1, sizeof(MAESAgent));
 	New->IniciadorVacio=MAESAgent0();
@@ -27,7 +27,7 @@ MAESAgent* CreateAgent(const char* name, MAESUBaseType_t pri, uint16_t sizeStack
 };
 */
 
-
+/*
 int main() {
 
 	
@@ -91,8 +91,15 @@ int main() {
 	//Inician Pruebas de la clase sysVars//
 
 
+	//Pruebas del AMS TASK//
+	
+
 
 	vTaskStartScheduler();
 	for (;;);
 	return 0;
 };
+*/
+
+
+

@@ -30,8 +30,11 @@ bool isRegistered0(Agent_Msg* Message, Agent_AID aid) { //Este recibía un result
 	}
 };
 Mailbox_Handle* get_mailbox0(Agent_Msg* Message, Agent_AID aid) { //En esta igual, no sé si tengo que inicializar el agente y env o sí sólo llamarlo así basta. 
-	MAESAgent* description;
-	description = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, aid);
+	printf("\ncaller: %s\n", &Message->ptr_env);
+	printf("\ncaller: %s\n", Message->ptr_env);
+	printf("\ncaller: %s\n", *Message->ptr_env);
+	MAESAgent* description = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, aid);
+	//description = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, aid);
 	return description->agent.mailbox_handle;
 };
 
@@ -119,12 +122,17 @@ void refresh_list0(Agent_Msg* Message) {// Lo mismo, no sé si inicializar env y 
 MSG_TYPE receive0(Agent_Msg* Message, MAESTickType_t timeout) {
 	//ptr_env = &env;
 	//Agent* a = (Agent*)ptr_env->get_TaskEnv(caller);
+	//Message->caller = 9;
+	printf("\nCaller AID: %s\n", Message->caller);
+	printf("\n Direccion del ptr: %p\n", &Message->ptr_env);
 	if (xQueueReceive(Message->get_mailbox(Message, Message->caller), &Message->msg, timeout) != pdPASS)
 	{
+		printf("\nMe tiró un no response\n");
 		return NO_RESPONSE;
 	}
 	else
 	{
+		printf("\nSe guardo el tipo de mensaje\n");
 		return Message->msg.type;
 	}
 };
@@ -204,8 +212,10 @@ ERROR_CODE send00(Agent_Msg* Message) {
 		if (error_code != NO_ERRORS)
 		{
 			error = error_code;
+			printf("\nHUBO ERRORES AL ENVIAR EL DATO UTILIZANDO SEND1\n");
 		}
 		i++;
+		printf("\n No hubo errores al enviar el dato en send1\n");
 	}
 	return error;
 };

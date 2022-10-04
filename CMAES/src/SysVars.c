@@ -20,7 +20,7 @@ MAESAgent* get_taskEnv0(sysVars* Vars, Agent_AID aid) {
 	//return environment[aid];
 };
 
-void* set_TaskEnv0(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
+void set_TaskEnv0(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
 	{
@@ -36,7 +36,7 @@ void* set_TaskEnv0(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
 };
 
 
-void* erase_TaskEnv0(sysVars* Vars, Agent_AID aid) {
+void erase_TaskEnv0(sysVars* Vars, Agent_AID aid) {
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
 	{

@@ -208,6 +208,8 @@
 		Agent_AID receivers[MAX_RECEIVERS];
 		UBaseType_t subscribers;
 		Agent_AID caller;
+
+		//Métodos
 		bool (* isRegistered)(Agent_Msg*,Agent_AID aid); //Este recibía un resultado booleano, revisar eso.// 
 		Mailbox_Handle* (* get_mailbox)(Agent_Msg*,Agent_AID aid);
 		void* (*Agent_Msg)(Agent_Msg*);
@@ -282,10 +284,13 @@
 	//Clase AMS Task
 	typedef struct AMSparameter AMSparameter;
 	struct AMSparameter{
+		sysVars* ptr_env;
 		Agent_Platform* services;
 		USER_DEF_COND* cond;
-		void* (* AMS_task)(AMSparameter* parameter,void* pvParameters,sysVars* env);
+		//void* (* AMS_task)(AMSparameter* parameter,void* pvParameters,sysVars* env);
 	};
+
+	
 
 
 	//Clase CyclicBehaviour
@@ -293,7 +298,7 @@
 	struct CyclicBehaviour {
 		void* taskParameters;
 		Agent_Msg msg;
-		void* (* CreateCyclicBehaviour)(CyclicBehaviour* Behaviour);
+		//void* (* CreateCyclicBehaviour)(CyclicBehaviour* Behaviour);
 		void* (* action)(CyclicBehaviour* Behaviour);
 		void* (*setup)(CyclicBehaviour* Behaviour);
 		bool (*done)(CyclicBehaviour* Behaviour);
@@ -307,7 +312,7 @@
 	struct OneShotBehaviour {
 		void* taskParameters;
 		Agent_Msg msg;
-		void* (*CreateOneShotBehaviour)(OneShotBehaviour* Behaviour);
+		//void* (*CreateOneShotBehaviour)(OneShotBehaviour* Behaviour);
 		void* (*action)(OneShotBehaviour* Behaviour);
 		void* (*setup)(OneShotBehaviour* Behaviour);
 		bool (*done)(OneShotBehaviour* Behaviour);
@@ -351,3 +356,4 @@
 	void ConstructorAMS(AMSparameter* parameter);
 	void ConstructorCyclicBehaviour(CyclicBehaviour* Behaviour);
 	void ConstructorOneShotBehaviour(OneShotBehaviour* Behaviour);
+	void ConstructorAgent_Organization(Agent_Organization* Organization, sysVars* env);
