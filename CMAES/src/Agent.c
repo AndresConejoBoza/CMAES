@@ -11,7 +11,7 @@
 
 
 Agent_AID* AID0(MAESAgent* MAESagent) {
-	printf("Se devuelve el aid del agente exitosamente:");
+	//printf("Se devuelve el aid del agente exitosamente:");
 	return MAESagent->agent.aid;
 };
 

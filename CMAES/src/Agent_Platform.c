@@ -349,9 +349,13 @@ AGENT_MODE get_stateFunction(Agent_Platform* platform, Agent_AID aid) {
 #endif
 
 Agent_info get_Agent_descriptionFunction(Agent_Platform* platform, Agent_AID aid) {
-	printf("AID entregado al get description function: %p\n", aid);
+	//printf("AID entregado al get description function: %p\n", aid);
+	aid = Platform.get_running_agent(&Platform);
 	//MAESAgent* a = env.get_taskEnv(&env, aid);
 	MAESAgent* a = (MAESAgent*)env.get_taskEnv(&env, aid);
+	//printf("Direccion retornada por gettaskenv : %p\n", env.get_taskEnv(&env, aid));
+	//printf("Direccion de a->agent: %p\n", &a->agent);
+	//printf("Direccion de a: %p\n", &a);
 	return a->agent;
 };
 

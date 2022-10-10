@@ -77,6 +77,7 @@ int sender_receiver() {
 	ConstructorCyclicBehaviour(&readingBehaviour);
 	sender.Iniciador(&sender, "Agent Sender", 1, 1024);
 	receiver.Iniciador(&receiver, "Agent Receiver", 3, 1024);
+	AP.Agent_Platform(&AP, "sender_receiver_platform");
 	
 	
 	printf("MAES DEMO \n");

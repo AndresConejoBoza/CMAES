@@ -7,18 +7,18 @@
 
 
 MAESAgent* get_taskEnvFunction(sysVars* Vars, Agent_AID aid) {
-	printf("Entre a get task env y recibi este aid: %s\n", aid);;
+	//printf("Entre a get task env y recibi este aid: %s\n", aid);;
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
 	{
 		if (Vars->environment[i].first == aid && aid!=NULL)
 		{
-			printf("Retorne algo diferente de nulo en gettaskenv con la direccion: %p\n", Vars->environment[i].second);
+			//printf("Retorne algo diferente de nulo en gettaskenv con la direccion: %p\n", Vars->environment[i].second);
 			return Vars->environment[i].second;
 		}
 		i++;
 	}
-	printf("Retorne nulo en gettaskenv\n");
+	//printf("Retorne nulo en gettaskenv\n");
 	return NULL;
 	//return environment[aid];
 };

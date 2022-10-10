@@ -8,17 +8,18 @@
 #include "supporting_functions.h"
 
 MAESAgent AgentA, AgentB, Referee;
-Agent_Platform AP_RPS; //Preguntarle a daniel por qué esta parte dice AP_RPS("windows")
+Agent_Platform Platform; 
 sysVars env;
 CyclicBehaviour playBehaviour;
 OneShotBehaviour watchoverBehaviour;
 Agent_Msg msg_play, msg_watchover;
 int bet;
+Agent_AID aidfunc;
 
 //Funcion aleatoria
 int getRandom() {
-	printf("numero generado: %i", rand(0, 2));
-	return rand(0, 2);
+	printf("numero generado: %i", rand() % 2);
+	return rand()%2;
 };
 
 //Funcion msg a int
@@ -43,10 +44,14 @@ void playSetup(void* behaviour) {
 };
 
 void playAction(void* behaviour) {
-	//printf("Nombre del agente: %s", AP_RPS.get_running_agent(&AP_RPS));
-	printf(AP_RPS.get_Agent_description(&AP_RPS, AP_RPS.get_running_agent(&AP_RPS))->agent_name);
+	printf("\nEntre a play action\n");
+	//aidfunc = Platform.get_running_agent(&Platform);
+	//printf("adfunc: %p\n", &aidfunc);
+	//printf("Nombre del agente: %s", Platform.get_running_agent(&Platform));
+	//printf("Direccion de la plataforma: %p\n", Platform);
+	printf("Nombre del agente jugando: %s\n",Platform.get_Agent_description(&Platform, Platform.get_running_agent(&Platform))->agent_name);
 	printf(": Rock, Paper, Scissors... \n");
-	AP_RPS.agent_wait(&AP_RPS, pdMS_TO_TICKS(10));
+	Platform.agent_wait(&Platform, pdMS_TO_TICKS(10));
 	auto num = getRandom();
 	char* bet= "";
 	switch (num){
@@ -102,49 +107,54 @@ void watchoverAction(void* behaviour) {
 		msg_watchover.receive(&msg_watchover,portMAX_DELAY);
 		if (msg_watchover.get_msg_type(&msg_watchover) == INFORM)
 		{
-			//printf("Playing now: ");
-			printf(AP_RPS.get_Agent_description(&AP_RPS,msg_watchover.get_sender(&msg_watchover))->agent_name);
+			printf("\nPlaying now: \n");
+			printf(Platform.get_Agent_description(&Platform,msg_watchover.get_sender(&msg_watchover))->agent_name);
 			printf(": ");
 			printf(msg_watchover.get_msg_content(&msg_watchover));
 			printf("\n");
 			if (msg_watchover.get_sender(&msg_watchover) == AgentA.AID(&AgentA))
 			{
+				printf("El sender era el Agente A\n");
 				msgA = msg_watchover.get_msg_content(&msg_watchover);
 				choiceA = choices(msgA);
 			}
 			else if (msg_watchover.get_sender(&msg_watchover) == AgentB.AID(&AgentB))
 			{
+				printf("El sender era el Agente B\n");
 				msgB = msg_watchover.get_msg_content(&msg_watchover);
 				choiceB = choices(msgB);
 			}
+			printf("Llegue al suspend\n");
+			printf("");
 			msg_watchover.suspend(&msg_watchover,msg_watchover.get_sender(&msg_watchover));
+			printf("sali del suspend\n");
 		}
-		if (AP_RPS.get_state(&AP_RPS,AgentA.AID(&AgentA)) == SUSPENDED && AP_RPS.get_state(&AP_RPS,AgentB.AID(&AgentB)) == SUSPENDED) {
+		if (Platform.get_state(&Platform,AgentA.AID(&AgentA)) == SUSPENDED && Platform.get_state(&Platform,AgentB.AID(&AgentB)) == SUSPENDED) {
 			break;
 		}
 	}
-
+	printf("Llegue al switch\n");
 	switch (winner[choiceA][choiceB])
 	{
 	case 0:
-		printf(AP_RPS.get_Agent_description(&AP_RPS,AP_RPS.get_running_agent(&AP_RPS))->agent_name);
+		printf(Platform.get_Agent_description(&Platform,Platform.get_running_agent(&Platform))->agent_name);
 		printf(": DRAW!\n");
 		break;
 
 	case 1:
-		printf(AP_RPS.get_Agent_description(&AP_RPS, AP_RPS.get_running_agent(&AP_RPS))->agent_name);
+		printf(Platform.get_Agent_description(&Platform, Platform.get_running_agent(&Platform))->agent_name);
 		printf(": PLAYER A WINS!\n");
 		break;
 
 	case 2:
-		printf(AP_RPS.get_Agent_description(&AP_RPS, AP_RPS.get_running_agent(&AP_RPS))->agent_name);
+		printf(Platform.get_Agent_description(&Platform, Platform.get_running_agent(&Platform))->agent_name);
 		printf(": PLAYER B WINS!\n");
 		break;
 
 	default:
 		break;
 	}
-	AP_RPS.agent_wait(&AP_RPS,pdMS_TO_TICKS(2000));
+	Platform.agent_wait(&Platform,pdMS_TO_TICKS(2000));
 	msg_watchover.resume(&msg_watchover,AgentA.AID(&AgentA));
 	msg_watchover.resume(&msg_watchover,AgentB.AID(&AgentB));
 	printf("-------------------PLAYING AGAIN---------------------\n");
@@ -164,21 +174,21 @@ int rock_paper_scissors() {
 	ConstructorAgente(&AgentB);
 	ConstructorAgente(&Referee);
 	ConstructorSysVars(&env);
-	ConstructorAgent_Platform(&AP_RPS, &env);
+	ConstructorAgent_Platform(&Platform, &env);
 	ConstructorAgent_Msg(&msg_play, &env);
 	ConstructorAgent_Msg(&msg_watchover, &env);
 	ConstructorCyclicBehaviour(&playBehaviour);
 	ConstructorOneShotBehaviour(&watchoverBehaviour);
-	AgentA.Iniciador(&AgentA, "Player A", 1, 512);
-	AgentB.Iniciador(&AgentB, "Player B", 1, 512);
-	Referee.Iniciador(&Referee, "Referee", 2, 512);
-
+	AgentA.Iniciador(&AgentA, "Player A", 1, 128);
+	AgentB.Iniciador(&AgentB, "Player B", 1, 128);
+	Referee.Iniciador(&Referee, "Referee", 2, 128);
+	Platform.Agent_Platform(&Platform, "RPS_platform");
 	printf("MAES DEMO \n");
-	AP_RPS.agent_init(&AP_RPS,&AgentA, &play);
-	AP_RPS.agent_init(&AP_RPS, &AgentB, &play);
-	AP_RPS.agent_init(&AP_RPS, &Referee, &watchover);
+	Platform.agent_init(&Platform,&AgentA, &play);
+	Platform.agent_init(&Platform, &AgentB, &play);
+	Platform.agent_init(&Platform, &Referee, &watchover);
 	//printf("Pase los agent inits");
-	AP_RPS.boot(&AP_RPS);
+	Platform.boot(&Platform);
 	printf("Boot exitoso \n");
 	/* Start the scheduler so the created tasks start executing. */
 	vTaskStartScheduler();

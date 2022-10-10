@@ -56,7 +56,7 @@ void Agent_Msg0(Agent_Msg* Message) {
 };
 
 ERROR_CODE add_receiver0(Agent_Msg* Message, Agent_AID aid_receiver) {
-	printf("aid entregado a la funcion add receiver: %p\n", aid_receiver);
+	//printf("aid entregado a la funcion add receiver: %p\n", aid_receiver);
 	if (Message->isRegistered(Message,aid_receiver))
 	{
 		if (aid_receiver == NULL)
@@ -249,7 +249,7 @@ MsgObj* get_msg0(Agent_Msg* Message) {
 };
 
 MSG_TYPE get_msg_type0(Agent_Msg* Message) {
-	printf("Tipo de mensaje: %s", Message->msg.type);
+	//printf("Tipo de mensaje: %s", Message->msg.type);
 	return Message->msg.type;
 }
 
@@ -360,11 +360,11 @@ ERROR_CODE suspend0(Agent_Msg* Message, Agent_AID target_agent) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	printf("\nEntre a suspend, ptr env: %p\n",Message->ptr_env);
+	//printf("\nEntre a suspend, ptr env: %p\n",Message->ptr_env);
 
 
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(&Message->ptr_env, Message->caller);
-	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(&Message->ptr_env,target_agent);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env, Message->caller);
+	agent_target = (MAESAgent*)env.get_taskEnv(&env,target_agent);
 
 	if (target_agent == NULL)
 	{
@@ -382,22 +382,31 @@ ERROR_CODE suspend0(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			printf("agentAP del AMS: %p\n", &agent_caller->agent.AP);
+			printf("llegue al xqueuesend\n");
+			printf("Direccion del get mailbox del mensaje: %p\n", Message->get_mailbox(&Message, AMS));
+			printf("Direccion del AMS: %p\n", &AMS);
+			printf("Direccion del mensaje: %s\n", Message->msg.content);
+			if (xQueueSend(Message->get_mailbox(&Message,agent_caller->agent.AP), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
+				printf("Sali invalido del suspend\n");
 				return INVALID;
 			}
 			else
 			{
+				printf("Sali sin errores del suspend\n");
 				return NO_ERRORS;
 			}
 		}
 		else
 		{
+			printf("Sali invalido del suspend\n");
 			return INVALID;
 		}
 	}
 	else
 	{
+		printf("Sali invalido del suspend\n");
 		return INVALID;
 	}
 };
