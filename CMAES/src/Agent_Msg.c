@@ -13,8 +13,8 @@ bool isRegistered0(Agent_Msg* Message, Agent_AID aid) { //Este recibía un result
 	//MAESAgent* description_sender = calloc(1, sizeof(MAESAgent));
 	//Inicializador(description_receiver);
 	//Inicializador(description_sender);
-	MAESAgent* description_receiver = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,aid);
-	MAESAgent* description_sender = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
+	MAESAgent* description_receiver = (MAESAgent*)env.get_taskEnv(&env,aid);
+	MAESAgent* description_sender = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
 
 
 	//Agent* description_receiver = (Agent*)ptr_env->get_TaskEnv(aid); No estoy seguro de si transcribí bien estas. Se transcribió a lineas 12-17
@@ -29,12 +29,23 @@ bool isRegistered0(Agent_Msg* Message, Agent_AID aid) { //Este recibía un result
 		return FALSE;
 	}
 };
+
+
 Mailbox_Handle* get_mailbox0(Agent_Msg* Message, Agent_AID aid) { //En esta igual, no sé si tengo que inicializar el agente y env o sí sólo llamarlo así basta. 
-	printf("\ncaller: %s\n", &Message->ptr_env);
-	printf("\ncaller: %s\n", Message->ptr_env);
-	printf("\ncaller: %s\n", *Message->ptr_env);
-	MAESAgent* description = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, aid);
+
+	//printf("Entre a getmailbox, ptr env despues del fix: %p\n", &Message->ptr_env);
+	//printf("Entre a getmailbox, ptr env despues del fix: %p\n", Message->ptr_env);
+	//printf("Entre a getmailbox, ptr env despues del fix: %p\n", *Message->ptr_env);
+	//printf("Entre a getmailbox, ptr env gettaskenv despues del fix: %p\n", &Message->ptr_env->get_taskEnv);
+	//MAESAgent* prueba = Message->ptr_env->get_taskEnv(&Message->ptr_env, aid);
+	MAESAgent* description = (MAESAgent*)env.get_taskEnv(&env, aid);
 	//description = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, aid);
+	//printf("Retorne el handle del mailbox\n");
+	//printf("Direccion de description: %p\n", &description);
+	if (description == NULL) {
+		//printf("Retorne nulo en getmailbox\n");
+		return NULL;
+	}
 	return description->agent.mailbox_handle;
 };
 
@@ -45,6 +56,7 @@ void Agent_Msg0(Agent_Msg* Message) {
 };
 
 ERROR_CODE add_receiver0(Agent_Msg* Message, Agent_AID aid_receiver) {
+	printf("aid entregado a la funcion add receiver: %p\n", aid_receiver);
 	if (Message->isRegistered(Message,aid_receiver))
 	{
 		if (aid_receiver == NULL)
@@ -123,18 +135,21 @@ MSG_TYPE receive0(Agent_Msg* Message, MAESTickType_t timeout) {
 	//ptr_env = &env;
 	//Agent* a = (Agent*)ptr_env->get_TaskEnv(caller);
 	//Message->caller = 9;
-	printf("\nCaller AID: %s\n", Message->caller);
-	printf("\n Direccion del ptr: %p\n", &Message->ptr_env);
-	if (xQueueReceive(Message->get_mailbox(Message, Message->caller), &Message->msg, timeout) != pdPASS)
+
+	//printf("\nEntre a receive Caller AID: %p\n", &Message->caller);
+	//printf("\n Direccion del ptr: %p\n", &Message->ptr_env);
+	//printf("\n Direccion del ptr a gettaskenv: %p\n", &Message->ptr_env->get_taskEnv);
+	if (xQueueReceive(Message->get_mailbox(&Message, Message->caller), &Message->msg, timeout) != pdPASS)
 	{
-		printf("\nMe tiró un no response\n");
+		//printf("\nMe tiró un no response\n");
 		return NO_RESPONSE;
 	}
 	else
 	{
-		printf("\nSe guardo el tipo de mensaje\n");
+		//printf("\nSe guardo el tipo de mensaje\n");
 		return Message->msg.type;
 	}
+	printf("\nPase al final de recieve");
 };
 
 ERROR_CODE send1(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t timeout) {// Igual, no sé si inicializar env y agentes. No sé qué es msg.etc
@@ -212,10 +227,10 @@ ERROR_CODE send00(Agent_Msg* Message) {
 		if (error_code != NO_ERRORS)
 		{
 			error = error_code;
-			printf("\nHUBO ERRORES AL ENVIAR EL DATO UTILIZANDO SEND1\n");
+			//printf("\nHUBO ERRORES AL ENVIAR EL DATO UTILIZANDO SEND1\n");
 		}
 		i++;
-		printf("\n No hubo errores al enviar el dato en send1\n");
+		//printf("\n No hubo errores al enviar el dato en send1\n");
 	}
 	return error;
 };
@@ -234,6 +249,7 @@ MsgObj* get_msg0(Agent_Msg* Message) {
 };
 
 MSG_TYPE get_msg_type0(Agent_Msg* Message) {
+	printf("Tipo de mensaje: %s", Message->msg.type);
 	return Message->msg.type;
 }
 
@@ -344,8 +360,11 @@ ERROR_CODE suspend0(Agent_Msg* Message, Agent_AID target_agent) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, Message->caller);
-	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,target_agent);
+	printf("\nEntre a suspend, ptr env: %p\n",Message->ptr_env);
+
+
+	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(&Message->ptr_env, Message->caller);
+	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(&Message->ptr_env,target_agent);
 
 	if (target_agent == NULL)
 	{
@@ -492,7 +511,7 @@ ERROR_CODE restart0(Agent_Msg* Message) {
 };
 
 
-void InicializadorAgent_Msg(Agent_Msg* Message,sysVars* env) {
+void ConstructorAgent_Msg(Agent_Msg* Message,sysVars* env) {
 	Message->ptr_env = env;
 	Message->isRegistered = &isRegistered0;
 	Message->get_mailbox = &get_mailbox0;

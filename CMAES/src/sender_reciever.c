@@ -20,7 +20,8 @@ Agent_Msg msg_writing, msg_reading;
 
 //Funciones referentes al writing Behaviour//
 
-void writingsetup(CyclicBehaviour* behaviour) {
+void writingsetup(void* behaviour) {
+	msg_writing.Agent_Msg(&msg_writing);
 	msg_writing.add_receiver(&msg_writing,receiver.AID(&receiver));
 };
 
@@ -30,11 +31,11 @@ void writingaction(CyclicBehaviour* behaviour) {
 	vTaskDelay(pdMS_TO_TICKS(1000));
 };
 
-void write(CyclicBehaviour* Behaviour) {
-	printf("\nEntreeeeee al write\n");
-	Behaviour->setup = &writingsetup;
-	Behaviour->action = &writingaction;
-	Behaviour->execute(Behaviour);
+void write(void* Behaviour) {
+	//printf("\nEntreeeeee al write\n");
+	writingBehaviour.setup = &writingsetup;
+	writingBehaviour.action = &writingaction;
+	writingBehaviour.execute(&writingBehaviour);
 };
 
 
@@ -42,26 +43,36 @@ void write(CyclicBehaviour* Behaviour) {
 
 
 void readingaction(CyclicBehaviour* behaviour) {
+	//printf("Entre a readingaction\n");
 	printf("Esperando... \n");
+	msg_reading.Agent_Msg(&msg_reading);
 	msg_reading.receive(&msg_reading,portMAX_DELAY);
 	printf("Mensaje recibido: ¡Hola MAES! \n");
 };
 
-void read(CyclicBehaviour* Behaviour) {
+void read(void* Behaviour) {
+	/*
+	printf("direccion recibida del behaviour: %p\n", &Behaviour);
+	CyclicBehaviour* readingBehaviour = &(CyclicBehaviour*)Behaviour;
+	printf("Direccion del readingbehaviour: %p\n", &readingBehaviour);
+	printf("Direccion del puntero hacia readingbehaviouraction: %p\n", &readingBehaviour->action);
 	printf("Entre??????????????");
-	Behaviour->action = &readingaction;
-	Behaviour->execute(Behaviour);
+	ConstructorCyclicBehaviour(readingBehaviour);
+	*/
+	//printf("Entre a read behaviour\n");
+	readingBehaviour.action = &readingaction;
+	readingBehaviour.execute(&readingBehaviour);
 };
 
 
 
-int main() {
+int sender_receiver() {
 	ConstructorAgente(&sender);
 	ConstructorAgente(&receiver);
-	InicializadorSysVars(&env);
+	ConstructorSysVars(&env);
 	ConstructorAgent_Platform(&AP, &env);
-	InicializadorAgent_Msg(&msg_writing, &env);
-	InicializadorAgent_Msg(&msg_reading, &env);
+	ConstructorAgent_Msg(&msg_writing, &env);
+	ConstructorAgent_Msg(&msg_reading, &env);
 	ConstructorCyclicBehaviour(&writingBehaviour);
 	ConstructorCyclicBehaviour(&readingBehaviour);
 	sender.Iniciador(&sender, "Agent Sender", 1, 1024);

@@ -33,10 +33,13 @@ void failure_recoveryFunction(CyclicBehaviour* Behaviour) {
 };
 
 void executeFunction(CyclicBehaviour* Behaviour) {
+	//printf("Entre a la ejecucion del behavior\n");
 	Behaviour->setup(Behaviour);
 	do
 	{
+		//printf("Estoy metido dentro del ciclo del behaviour\n");
 		Behaviour->action(Behaviour);
+		//printf("Llegue a comparar si hay deteccion de fallas\n");
 		if (Behaviour->failure_detection(Behaviour))
 		{
 			Behaviour->failure_identification(Behaviour);

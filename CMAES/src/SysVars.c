@@ -6,21 +6,24 @@
 
 
 
-MAESAgent* get_taskEnv0(sysVars* Vars, Agent_AID aid) {
+MAESAgent* get_taskEnvFunction(sysVars* Vars, Agent_AID aid) {
+	printf("Entre a get task env y recibi este aid: %s\n", aid);;
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
 	{
-		if (Vars->environment[i].first == aid)
+		if (Vars->environment[i].first == aid && aid!=NULL)
 		{
+			printf("Retorne algo diferente de nulo en gettaskenv con la direccion: %p\n", Vars->environment[i].second);
 			return Vars->environment[i].second;
 		}
 		i++;
 	}
+	printf("Retorne nulo en gettaskenv\n");
 	return NULL;
 	//return environment[aid];
 };
 
-void set_TaskEnv0(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
+void set_TaskEnvFunction(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
 	{
@@ -36,7 +39,7 @@ void set_TaskEnv0(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
 };
 
 
-void erase_TaskEnv0(sysVars* Vars, Agent_AID aid) {
+void erase_TaskEnvFunction(sysVars* Vars, Agent_AID aid) {
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
 	{
@@ -58,7 +61,7 @@ void erase_TaskEnv0(sysVars* Vars, Agent_AID aid) {
 };
 
 
-sysVar* getEnv0(sysVars* Vars) {
+sysVar* getEnvFunction(sysVars* Vars) {
 	return Vars->environment;  //Revisar este porque normalmente devuelve el enviroment, en este caso está devolviendo el puntero, no sé si afectará.
 	//No tira errores si le quito el & del puntero.
 };
@@ -66,9 +69,9 @@ sysVar* getEnv0(sysVars* Vars) {
 
 
 
-void InicializadorSysVars(sysVars* Vars) {
-	Vars->get_taskEnv = &get_taskEnv0;
-	Vars->set_TaskEnv = &set_TaskEnv0;
-	Vars->erase_TaskEnv = &erase_TaskEnv0;
-	Vars->getEnv = &getEnv0;
+void ConstructorSysVars(sysVars* Vars) {
+	Vars->get_taskEnv = &get_taskEnvFunction;
+	Vars->set_TaskEnv = &set_TaskEnvFunction;
+	Vars->erase_TaskEnv = &erase_TaskEnvFunction;
+	Vars->getEnv = &getEnvFunction;
 }

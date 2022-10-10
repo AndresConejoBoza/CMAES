@@ -29,7 +29,7 @@ void MAESAgent1(MAESAgent* MAESagent, const char* name, MAESUBaseType_t pri, uin
 	MAESagent->agent.affiliation = NON_MEMBER;
 	MAESagent->agent.role = VISITOR;
 	//MAESagent->AID = AID0; //SEGÚN VIDEO
-	printf("Se creo el agente exitosamente: %d\n",sizeStack);
+	//printf("Se creo el agente exitosamente: %d\n",sizeStack);
 	//printf(MAESagent->agent.agent_name);
 };
 
