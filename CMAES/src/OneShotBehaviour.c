@@ -7,41 +7,41 @@
 	//No tiene nada
 //};
 
-void actionFunctionOSB(OneShotBehaviour* Behaviour) {
+void actionFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 	//Según la programación original, se le asignaba =0
 };
 
-void setupFunctionOSB(OneShotBehaviour* Behaviour) {
+void setupFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 	//No tiene nada
 };
 
-bool doneFunctionOSB(OneShotBehaviour* Behaviour) {
+bool doneFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 	return true;
 };
 
-bool failure_detectionFunctionOSB(OneShotBehaviour* Behaviour) {
+bool failure_detectionFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 	return false;
 };
 
-void failure_identificationFunctionOSB(OneShotBehaviour* Behaviour) {
+void failure_identificationFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 	//No tiene nada
 };
 
-void failure_recoveryFunctionOSB(OneShotBehaviour* Behaviour) {
+void failure_recoveryFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 	//No tiene nada
 };
 
-void executeFunctionOSB(OneShotBehaviour* Behaviour) {
-	Behaviour->setup(Behaviour);
+void executeFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
+	Behaviour->setup(Behaviour,pvParameters);
 	do
 	{
-		Behaviour->action(Behaviour);
-		if (Behaviour->failure_detection(Behaviour))
+		Behaviour->action(Behaviour, pvParameters);
+		if (Behaviour->failure_detection(Behaviour, pvParameters))
 		{
-			Behaviour->failure_identification(Behaviour);
-			Behaviour->failure_recovery(Behaviour);
+			Behaviour->failure_identification(Behaviour, pvParameters);
+			Behaviour->failure_recovery(Behaviour, pvParameters);
 		}
-	} while (!Behaviour->done(Behaviour));
+	} while (!Behaviour->done(Behaviour, pvParameters));
 };
 
 

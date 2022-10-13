@@ -8,44 +8,44 @@
 	//No tiene nada
 //};
 
-void actionFunction(CyclicBehaviour* Behaviour) {
+void actionFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	// Según la programación original, asignaba un =0
 };
 
-void setupFunction(CyclicBehaviour* Behaviour) {
+void setupFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	//No tiene nada
 };
 
-bool doneFunction(CyclicBehaviour* Behaviour) {
+bool doneFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	return false;
 };
 
-bool failure_detectionFunction(CyclicBehaviour* Behaviour) {
+bool failure_detectionFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	return false;
 };
 
-void failure_identificationFunction(CyclicBehaviour* Behaviour) {
+void failure_identificationFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	//No tiene nada
 };
 
-void failure_recoveryFunction(CyclicBehaviour* Behaviour) {
+void failure_recoveryFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	//No tiene nada
 };
 
-void executeFunction(CyclicBehaviour* Behaviour) {
+void executeFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	//printf("Entre a la ejecucion del behavior\n");
-	Behaviour->setup(Behaviour);
+	Behaviour->setup(Behaviour, pvParameters);
 	do
 	{
 		//printf("Estoy metido dentro del ciclo del behaviour\n");
-		Behaviour->action(Behaviour);
+		Behaviour->action(Behaviour, pvParameters);
 		//printf("Llegue a comparar si hay deteccion de fallas\n");
-		if (Behaviour->failure_detection(Behaviour))
+		if (Behaviour->failure_detection(Behaviour, pvParameters))
 		{
-			Behaviour->failure_identification(Behaviour);
-			Behaviour->failure_recovery(Behaviour);
+			Behaviour->failure_identification(Behaviour, pvParameters);
+			Behaviour->failure_recovery(Behaviour, pvParameters);
 		}
-	} while (!Behaviour->done(Behaviour));
+	} while (!Behaviour->done(Behaviour, pvParameters));
 };
 
 

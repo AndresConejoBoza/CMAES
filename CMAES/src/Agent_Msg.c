@@ -4,8 +4,10 @@
 #include <stdbool.h>
 
 
-
-bool isRegistered0(Agent_Msg* Message, Agent_AID aid) { //Este recibía un resultado booleano, revisar eso.// No deja return true, hay que cambiar la lógica a 1 y 0.
+//Is Registered Function: This function checks if an Agent is registered in the environment.
+//Inputs: The Message instance itself and the AID.
+//Outputs: True or False, depending on wether the agent was found or not.
+bool isRegisteredFunction(Agent_Msg* Message, Agent_AID aid) { //Este recibía un resultado booleano, revisar eso.// No deja return true, hay que cambiar la lógica a 1 y Function.
 
 
 
@@ -30,58 +32,67 @@ bool isRegistered0(Agent_Msg* Message, Agent_AID aid) { //Este recibía un result
 	}
 };
 
-
-Mailbox_Handle* get_mailbox0(Agent_Msg* Message, Agent_AID aid) { //En esta igual, no sé si tengo que inicializar el agente y env o sí sólo llamarlo así basta. 
+//Get Mailbox Function: This function returns a pointer to the mailbox handle of an Agent.
+//Inputs: The message instance itself and the AID.
+//Outputs: Pointer to the mailbox handle of the Agent.
+Mailbox_Handle* get_mailboxFunction(Agent_Msg* Message, Agent_AID aid) { //En esta igual, no sé si tengo que inicializar el agente y env o sí sólo llamarlo así basta. 
 
 	//printf("Entre a getmailbox, ptr env despues del fix: %p\n", &Message->ptr_env);
 	//printf("Entre a getmailbox, ptr env despues del fix: %p\n", Message->ptr_env);
 	//printf("Entre a getmailbox, ptr env despues del fix: %p\n", *Message->ptr_env);
-	//printf("Entre a getmailbox, ptr env gettaskenv despues del fix: %p\n", &Message->ptr_env->get_taskEnv);
-	//MAESAgent* prueba = Message->ptr_env->get_taskEnv(&Message->ptr_env, aid);
+	//printf("Entre a getmailbox, ptr env gettaskenv despues del fix: %p\n", &env.get_taskEnv);
+	//MAESAgent* prueba = env.get_taskEnv(&env, aid);
 	MAESAgent* description = (MAESAgent*)env.get_taskEnv(&env, aid);
-	//description = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env, aid);
+	//description = (MAESAgent*)env.get_taskEnv(env, aid);
 	//printf("Retorne el handle del mailbox\n");
 	//printf("Direccion de description: %p\n", &description);
 	if (description == NULL) {
-		//printf("Retorne nulo en getmailbox\n");
+		printf("Retorne nulo en getmailbox\n");
 		return NULL;
 	}
 	return description->agent.mailbox_handle;
 };
 
-void Agent_Msg0(Agent_Msg* Message) {
+//Agent MSG Function: This function sets the default values of some of the pointers used. This function is normally used when you need to set the caller.
+//Inputs: The message instance itself.
+//Outputs: None.
+void Agent_MsgFunction(Agent_Msg* Message) {
 	Message->caller = xTaskGetCurrentTaskHandle();
 	Message->clear_all_receiver(Message);
-	Message->subscribers = 0;
+	//Message->subscribers = 0;
 };
 
-ERROR_CODE add_receiver0(Agent_Msg* Message, Agent_AID aid_receiver) {
+ERROR_CODE add_receiverFunction(Agent_Msg* Message, Agent_AID aid_receiver) {
 	//printf("aid entregado a la funcion add receiver: %p\n", aid_receiver);
 	if (Message->isRegistered(Message,aid_receiver))
 	{
 		if (aid_receiver == NULL)
 		{
+			//printf("Se devolvio handle null\n");
 			return HANDLE_NULL;
 		}
 		if (Message->subscribers < MAX_RECEIVERS)
 		{
 			Message->receivers[Message->subscribers] = aid_receiver;
 			Message->subscribers= Message->subscribers+1;
+			//printf("Se devolvio no errors y subscribers+1\n");
 			return NO_ERRORS;
 		}
 		else
 		{
+			//printf("Se devolvio lista full\n");
 			return LIST_FULL;
 		}
 	}
 	else
 	{
+		//printf("Se devolvio not found\n");
 		return NOT_FOUND;
 	}
 };
 
 
-ERROR_CODE remove_receiver0(Agent_Msg* Message, Agent_AID aid) {
+ERROR_CODE remove_receiverFunction(Agent_Msg* Message, Agent_AID aid) {
 	MAESUBaseType_t i = 0;
 	while (i < MAX_RECEIVERS)
 	{
@@ -108,7 +119,7 @@ ERROR_CODE remove_receiver0(Agent_Msg* Message, Agent_AID aid) {
 	}
 };
 
-void clear_all_receiver0(Agent_Msg* Message) {
+void clear_all_receiverFunction(Agent_Msg* Message) {
 	MAESUBaseType_t i = 0;
 	while (i < MAX_RECEIVERS)
 	{
@@ -117,13 +128,13 @@ void clear_all_receiver0(Agent_Msg* Message) {
 	}
 };
 
-void refresh_list0(Agent_Msg* Message) {// Lo mismo, no sé si inicializar env y el agente.
+void refresh_listFunction(Agent_Msg* Message) {// Lo mismo, no sé si inicializar env y el agente.
 	MAESAgent* agent_caller, *agent_receiver;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
 
 	for (UBaseType_t i = 0; i < Message->subscribers; i++)
 	{
-		agent_receiver = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->receivers[i]);
+		agent_receiver = (MAESAgent*)env.get_taskEnv(&env,Message->receivers[i]);
 		if (Message->isRegistered(Message,Message->receivers[i]) || agent_caller->agent.org != agent_receiver->agent.org)
 		{
 			Message->remove_receiver(Message,Message->receivers[i]);
@@ -131,14 +142,14 @@ void refresh_list0(Agent_Msg* Message) {// Lo mismo, no sé si inicializar env y 
 	}
 };
 
-MSG_TYPE receive0(Agent_Msg* Message, MAESTickType_t timeout) {
+MSG_TYPE receiveFunction(Agent_Msg* Message, MAESTickType_t timeout) {
 	//ptr_env = &env;
 	//Agent* a = (Agent*)ptr_env->get_TaskEnv(caller);
 	//Message->caller = 9;
 
 	//printf("\nEntre a receive Caller AID: %p\n", &Message->caller);
-	//printf("\n Direccion del ptr: %p\n", &Message->ptr_env);
-	//printf("\n Direccion del ptr a gettaskenv: %p\n", &Message->ptr_env->get_taskEnv);
+	//printf("\n Direccion del ptr: %p\n", &&env);
+	//printf("\n Direccion del ptr a gettaskenv: %p\n", &env.get_taskEnv);
 	if (xQueueReceive(Message->get_mailbox(&Message, Message->caller), &Message->msg, timeout) != pdPASS)
 	{
 		//printf("\nMe tiró un no response\n");
@@ -152,32 +163,40 @@ MSG_TYPE receive0(Agent_Msg* Message, MAESTickType_t timeout) {
 	printf("\nPase al final de recieve");
 };
 
-ERROR_CODE send1(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t timeout) {// Igual, no sé si inicializar env y agentes. No sé qué es msg.etc
+ERROR_CODE send1Function(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t timeout) {// Igual, no sé si inicializar env y agentes. No sé qué es msg.etc
+	//printf("Caller dentro de Send1: %p\n", Message->caller);
 	Message->msg.target_agent = aid_receiver; 
 	Message->msg.sender_agent = Message->caller;
 
 	MAESAgent* agent_caller, * agent_receiver;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
-	agent_receiver = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,aid_receiver);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
+	agent_receiver = (MAESAgent*)env.get_taskEnv(&env,aid_receiver);
 
 	
 	//agent_caller = (Agent*)ptr_env->get_TaskEnv(caller);
 	//agent_receiver = (Agent*)ptr_env->get_TaskEnv(aid_receiver);
-
+	//printf("Llegue a is registered\n");
 	if (Message->isRegistered(Message,aid_receiver)==0)
 	{
 		return NOT_REGISTERED;
 	}
 	else
 	{
+		//printf("Pase y si estaba registrado\n");
 		if (agent_caller->agent.org == NULL && agent_receiver->agent.org == NULL)
 		{
-			if (xQueueSend(Message->get_mailbox(Message,aid_receiver), &Message->msg, timeout) != pdPASS) 
+			//printf("Pase a 1\n");
+			//printf("Mensaje: %s\n", Message->msg.content);
+			//printf("aid del aid_receiver: %p", aid_receiver);
+			//printf("Enviando......");
+			if (xQueueSend(Message->get_mailbox(&Message,aid_receiver), &Message->msg, timeout) != pdPASS) 
 			{
+				//printf("Me tiro timeout\n");
 				return TIMEOUT;
 			}
 			else
 			{
+				//printf("Me tiro sin errores el send1\n");
 				return NO_ERRORS;
 			}
 		}
@@ -185,7 +204,7 @@ ERROR_CODE send1(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t timeout)
 		{
 			if (((agent_caller->agent.org->org_type == TEAM) && (agent_caller->agent.role == PARTICIPANT)) || ((agent_caller->agent.org->org_type == HIERARCHY) && (agent_receiver->agent.role == MODERATOR)))
 			{
-				if (xQueueSend(Message->get_mailbox(Message,aid_receiver), &Message->msg, timeout) != pdPASS)
+				if (xQueueSend(Message->get_mailbox(&Message,aid_receiver), &Message->msg, timeout) != pdPASS)
 				{
 					return TIMEOUT;
 				}
@@ -216,14 +235,18 @@ ERROR_CODE send1(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t timeout)
 		}
 	}
 };
-ERROR_CODE send00(Agent_Msg* Message) {
+ERROR_CODE send0Function(Agent_Msg* Message) {
+	//printf("Caller dentro de Send0: %p\n", Message->caller);
+	//printf("Entre a send0\n");
 	MAESUBaseType_t i = 0;
 	ERROR_CODE error_code;
 	ERROR_CODE error = NO_ERRORS;
 
 	while (Message->receivers[i] != NULL)
 	{
+		//printf("Entro al ciclo dentro de send0\n");
 		error_code = Message->send(Message, Message->receivers[i], portMAX_DELAY);
+		//printf("Paso el send message\n");
 		if (error_code != NO_ERRORS)
 		{
 			error = error_code;
@@ -235,43 +258,43 @@ ERROR_CODE send00(Agent_Msg* Message) {
 	return error;
 };
 
-void set_msg_type0(Agent_Msg* Message, MSG_TYPE type) {
+void set_msg_typeFunction(Agent_Msg* Message, MSG_TYPE type) {
 	Message->msg.type = type;
 };
 
-void set_msg_content0(Agent_Msg* Message, char* msg_content) {
+void set_msg_contentFunction(Agent_Msg* Message, char* msg_content) {
 	Message->msg.content = msg_content;
 };
 
-MsgObj* get_msg0(Agent_Msg* Message) {
+MsgObj* get_msgFunction(Agent_Msg* Message) {
 	MsgObj* ptr = &Message->msg;
 	return ptr;
 };
 
-MSG_TYPE get_msg_type0(Agent_Msg* Message) {
+MSG_TYPE get_msg_typeFunction(Agent_Msg* Message) {
 	//printf("Tipo de mensaje: %s", Message->msg.type);
 	return Message->msg.type;
 }
 
-char* get_msg_content0(Agent_Msg* Message) {
+char* get_msg_contentFunction(Agent_Msg* Message) {
 	return Message->msg.content;
 };
 
-Agent_AID* get_sender0(Agent_Msg* Message) {
+Agent_AID get_senderFunction(Agent_Msg* Message) {
 	return Message->msg.sender_agent;
 };
 
-Agent_AID* get_target_agent0(Agent_Msg* Message) {
+Agent_AID get_target_agentFunction(Agent_Msg* Message) {
 	return Message->msg.target_agent;
 };
 
-ERROR_CODE registration0(Agent_Msg* Message, Agent_AID target_agent) { //mismo problema con agentes y env
+ERROR_CODE registrationFunction(Agent_Msg* Message, Agent_AID target_agent) { //mismo problema con agentes y env
 
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
-	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,target_agent);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
+	agent_target = (MAESAgent*)env.get_taskEnv(&env,target_agent);
 
 	if (target_agent == NULL)
 	{
@@ -311,13 +334,13 @@ ERROR_CODE registration0(Agent_Msg* Message, Agent_AID target_agent) { //mismo p
 	}
 };
 
-ERROR_CODE deregistration0(Agent_Msg* Message, Agent_AID target_agent){
+ERROR_CODE deregistrationFunction(Agent_Msg* Message, Agent_AID target_agent){
 
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
-	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,target_agent);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
+	agent_target = (MAESAgent*)env.get_taskEnv(&env,target_agent);
 
 	if (target_agent == NULL)
 	{
@@ -335,7 +358,7 @@ ERROR_CODE deregistration0(Agent_Msg* Message, Agent_AID target_agent){
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -355,13 +378,12 @@ ERROR_CODE deregistration0(Agent_Msg* Message, Agent_AID target_agent){
 	}
 };
 
-ERROR_CODE suspend0(Agent_Msg* Message, Agent_AID target_agent) {
+ERROR_CODE suspendFunction(Agent_Msg* Message, Agent_AID target_agent) {
 
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	//printf("\nEntre a suspend, ptr env: %p\n",Message->ptr_env);
-
+	//printf("\nEntre a suspend, ptr env: %p\n",&env);
 
 	agent_caller = (MAESAgent*)env.get_taskEnv(&env, Message->caller);
 	agent_target = (MAESAgent*)env.get_taskEnv(&env,target_agent);
@@ -382,41 +404,41 @@ ERROR_CODE suspend0(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			printf("agentAP del AMS: %p\n", &agent_caller->agent.AP);
-			printf("llegue al xqueuesend\n");
-			printf("Direccion del get mailbox del mensaje: %p\n", Message->get_mailbox(&Message, AMS));
-			printf("Direccion del AMS: %p\n", &AMS);
-			printf("Direccion del mensaje: %s\n", Message->msg.content);
-			if (xQueueSend(Message->get_mailbox(&Message,agent_caller->agent.AP), &Message->msg, portMAX_DELAY) != pdPASS)
+			//printf("agentAP del AMS: %p\n", &agent_caller->agent.AP);
+			//printf("llegue al xqueuesend\n");
+			//printf("Direccion del get mailbox del mensaje: %p\n", Message->get_mailbox(&Message, AMS));
+			//printf("Direccion del AMS: %p\n", &AMS);
+			//printf("Direccion del mensaje: %s\n", Message->msg.content);
+			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
-				printf("Sali invalido del suspend\n");
+				//printf("Sali invalido del suspend\n");
 				return INVALID;
 			}
 			else
 			{
-				printf("Sali sin errores del suspend\n");
+				//printf("Sali sin errores del suspend\n");
 				return NO_ERRORS;
 			}
 		}
 		else
 		{
-			printf("Sali invalido del suspend\n");
+			//printf("Sali invalido del suspend\n");
 			return INVALID;
 		}
 	}
 	else
 	{
-		printf("Sali invalido del suspend\n");
+		//printf("Sali invalido del suspend\n");
 		return INVALID;
 	}
 };
-ERROR_CODE resume0(Agent_Msg* Message, Agent_AID target_agent) {
+ERROR_CODE resumeFunction(Agent_Msg* Message, Agent_AID target_agent) {
 
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
-	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,target_agent);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
+	agent_target = (MAESAgent*)env.get_taskEnv(&env,target_agent);
 
 	if (target_agent == NULL)
 	{
@@ -434,7 +456,7 @@ ERROR_CODE resume0(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -453,13 +475,13 @@ ERROR_CODE resume0(Agent_Msg* Message, Agent_AID target_agent) {
 		return INVALID;
 	}
 };
-ERROR_CODE kill0(Agent_Msg* Message, Agent_AID target_agent) {
+ERROR_CODE killFunction(Agent_Msg* Message, Agent_AID target_agent) {
 
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
 	MAESAgent* agent_target;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
-	agent_target = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,target_agent);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
+	agent_target = (MAESAgent*)env.get_taskEnv(&env,target_agent);
 
 	if (target_agent == NULL)
 	{
@@ -477,7 +499,7 @@ ERROR_CODE kill0(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -496,11 +518,11 @@ ERROR_CODE kill0(Agent_Msg* Message, Agent_AID target_agent) {
 		return INVALID;
 	}
 };
-ERROR_CODE restart0(Agent_Msg* Message) {
+ERROR_CODE restartMsgFunction(Agent_Msg* Message) {
 
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
-	agent_caller = (MAESAgent*)Message->ptr_env->get_taskEnv(Message->ptr_env,Message->caller);
+	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
 
 	Message->msg.type = REQUEST;
 	Message->msg.content = (char*)"RESTART";
@@ -509,7 +531,7 @@ ERROR_CODE restart0(Agent_Msg* Message) {
 
 	AMS = agent_caller->agent.AP;
 
-	if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+	if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 	{
 		return INVALID;
 	}
@@ -521,28 +543,29 @@ ERROR_CODE restart0(Agent_Msg* Message) {
 
 
 void ConstructorAgent_Msg(Agent_Msg* Message,sysVars* env) {
+	Message->subscribers = 0;
 	Message->ptr_env = env;
-	Message->isRegistered = &isRegistered0;
-	Message->get_mailbox = &get_mailbox0;
-	Message->Agent_Msg = &Agent_Msg0;
-	Message->add_receiver = &add_receiver0;
-	Message->remove_receiver = &remove_receiver0;
-	Message->clear_all_receiver = &clear_all_receiver0;
-	Message->refresh_list = &refresh_list0;
-	Message->receive = &receive0;
-	Message->send = &send1;
-	Message->send0= &send00;
-	Message->set_msg_type = &set_msg_type0;
-	Message->set_msg_content = &set_msg_content0;
-	Message->get_msg = &get_msg0;
-	Message->get_msg_type = &get_msg_type0;
-	Message->get_msg_content = &get_msg_content0;
-	Message->get_sender = &get_sender0;
-	Message->get_target_agent = &get_target_agent0;
-	Message->registration = &registration0;
-	Message->deregistration = &deregistration0;
-	Message->suspend = &suspend0;
-	Message->resume = &resume0;
-	Message->kill = &kill0;
-	Message->restart = &restart0;
+	Message->isRegistered = &isRegisteredFunction;
+	Message->get_mailbox = &get_mailboxFunction;
+	Message->Agent_Msg = &Agent_MsgFunction;
+	Message->add_receiver = &add_receiverFunction;
+	Message->remove_receiver = &remove_receiverFunction;
+	Message->clear_all_receiver = &clear_all_receiverFunction;
+	Message->refresh_list = &refresh_listFunction;
+	Message->receive = &receiveFunction;
+	Message->send = &send1Function;
+	Message->send0= &send0Function;
+	Message->set_msg_type = &set_msg_typeFunction;
+	Message->set_msg_content = &set_msg_contentFunction;
+	Message->get_msg = &get_msgFunction;
+	Message->get_msg_type = &get_msg_typeFunction;
+	Message->get_msg_content = &get_msg_contentFunction;
+	Message->get_sender = &get_senderFunction;
+	Message->get_target_agent = &get_target_agentFunction;
+	Message->registration = &registrationFunction;
+	Message->deregistration = &deregistrationFunction;
+	Message->suspend = &suspendFunction;
+	Message->resume = &resumeFunction;
+	Message->kill = &killFunction;
+	Message->restart = &restartMsgFunction;
 }

@@ -10,15 +10,15 @@
 MAESAgent AgentA, AgentB, Referee;
 Agent_Platform Platform; 
 sysVars env;
-CyclicBehaviour playBehaviour;
+CyclicBehaviour playBehaviourA, playBehaviourB;
 OneShotBehaviour watchoverBehaviour;
-Agent_Msg msg_play, msg_watchover;
+Agent_Msg msg_playA,msg_playB, msg_watchover;
 int bet;
-Agent_AID aidfunc;
+
 
 //Funcion aleatoria
 int getRandom() {
-	printf("numero generado: %i", rand() % 2);
+	//printf("numero generado: %i", rand() % 2);
 	return rand()%2;
 };
 
@@ -38,22 +38,22 @@ int choices(char* msg) {
 	}
 };
 
-void playSetup(void* behaviour) {
-	msg_play.Agent_Msg(&msg_play);
-	msg_play.add_receiver(&msg_play, Referee.AID(&Referee));
+void playSetup(CyclicBehaviour* Behaviour, void* pvParameters) {
+	Behaviour->msg->Agent_Msg(Behaviour->msg);
+	Behaviour->msg->add_receiver(Behaviour->msg, Referee.AID(&Referee));
 };
 
-void playAction(void* behaviour) {
-	printf("\nEntre a play action\n");
-	//aidfunc = Platform.get_running_agent(&Platform);
-	//printf("adfunc: %p\n", &aidfunc);
-	//printf("Nombre del agente: %s", Platform.get_running_agent(&Platform));
-	//printf("Direccion de la plataforma: %p\n", Platform);
-	printf("Nombre del agente jugando: %s\n",Platform.get_Agent_description(&Platform, Platform.get_running_agent(&Platform))->agent_name);
+void playAction(CyclicBehaviour* Behaviour, void* pvParameters) {
+	//printf("Caller: %p\n", Behaviour->msg->caller);
+	//printf("%p\n", msg_playA.caller);
+	//printf("%p\n", msg_playB.caller);
+	Agent_info informacion = Platform.get_Agent_description(Platform.get_running_agent(&Platform));
+	printf("Player: %s\n",informacion.agent_name);
 	printf(": Rock, Paper, Scissors... \n");
 	Platform.agent_wait(&Platform, pdMS_TO_TICKS(10));
-	auto num = getRandom();
+	int num = getRandom();
 	char* bet= "";
+	printf("\nPlaying: %s\n", informacion.agent_name);
 	switch (num){
 	case 0:
 		bet = "ROCK";
@@ -70,28 +70,38 @@ void playAction(void* behaviour) {
 	default:
 		break;
 	}
-	msg_play.set_msg_content(&msg_play, bet);
-	msg_play.set_msg_type(&msg_play, INFORM);
-	msg_play.send0(&msg_play);
+	Behaviour->msg->set_msg_content(Behaviour->msg, bet);
+	//printf("Paso el set content\n");
+	Behaviour->msg->set_msg_type(Behaviour->msg, INFORM);
+	Behaviour->msg->send0(Behaviour->msg);
 };
 
-void play(void* behaviour) {
-	printf("Entre a play");
-	playBehaviour.setup = &playSetup;
-	playBehaviour.action = &playAction;
-	playBehaviour.execute(&playBehaviour);
+void playA(void* pvParameters) {;
+	playBehaviourA.msg = &msg_playA;
+	playBehaviourA.setup = &playSetup;
+	playBehaviourA.action = &playAction;
+	for (;;) {
+		playBehaviourA.execute(&playBehaviourA, &pvParameters);
+	}
 };
 
-void watchoverSetup(void* behaviour) {
-	printf("Entre a watchover setup\n");
-	msg_watchover.Agent_Msg(&msg_watchover);
-	msg_watchover.add_receiver(&msg_watchover,AgentA.AID(&AgentA));
-	msg_watchover.add_receiver(&msg_watchover,AgentB.AID(&AgentB));
-	printf("Termine watchover setup\n");
+void playB(void* pvParameters) {
+	playBehaviourB.msg = &msg_playB;
+	playBehaviourB.setup = &playSetup;
+	playBehaviourB.action = &playAction;
+	for (;;) {
+		playBehaviourB.execute(&playBehaviourB, &pvParameters);
+	}
 };
 
-void watchoverAction(void* behaviour) {
-	printf("Entre a watchover action\n");
+
+void watchoverSetup(OneShotBehaviour* Behaviour, void* pvParameters) {
+	Behaviour->msg->Agent_Msg(Behaviour->msg);
+	Behaviour->msg->add_receiver(Behaviour->msg,AgentA.AID(&AgentA));
+	Behaviour->msg->add_receiver(Behaviour->msg,AgentB.AID(&AgentB));
+};
+
+void watchoverAction(OneShotBehaviour* Behaviour, void* pvParameters) {
 	char* msgA;
 	char* msgB;
 	int choiceA;
@@ -104,50 +114,64 @@ void watchoverAction(void* behaviour) {
 	printf("\nREFEREE READY \n");
 	while (true)
 	{
-		msg_watchover.receive(&msg_watchover,portMAX_DELAY);
-		if (msg_watchover.get_msg_type(&msg_watchover) == INFORM)
+		Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
+		if (Behaviour->msg->get_msg_type(Behaviour->msg) == INFORM)
 		{
-			printf("\nPlaying now: \n");
-			printf(Platform.get_Agent_description(&Platform,msg_watchover.get_sender(&msg_watchover))->agent_name);
+			//printf("\nPlaying now: \n");
+			Agent_info PlayerInfo = Platform.get_Agent_description(Behaviour->msg->get_sender(Behaviour->msg));
+			//printf("\n");
+			printf(PlayerInfo.agent_name);
 			printf(": ");
-			printf(msg_watchover.get_msg_content(&msg_watchover));
+			printf(Behaviour->msg->get_msg_content(Behaviour->msg));
 			printf("\n");
-			if (msg_watchover.get_sender(&msg_watchover) == AgentA.AID(&AgentA))
+			if (Behaviour->msg->get_sender(Behaviour->msg) == AgentA.AID(&AgentA))
 			{
-				printf("El sender era el Agente A\n");
-				msgA = msg_watchover.get_msg_content(&msg_watchover);
+				//printf("El sender era el Agente A\n");
+				msgA = Behaviour->msg->get_msg_content(Behaviour->msg);
 				choiceA = choices(msgA);
 			}
-			else if (msg_watchover.get_sender(&msg_watchover) == AgentB.AID(&AgentB))
+			else if (Behaviour->msg->get_sender(Behaviour->msg) == AgentB.AID(&AgentB))
 			{
-				printf("El sender era el Agente B\n");
-				msgB = msg_watchover.get_msg_content(&msg_watchover);
+				//printf("El sender era el Agente B\n");
+				//printf("AID del Agente que envio el mensaje: %p\n", msg_watchover.get_sender(&msg_watchover));
+				//printf("AID del Agente B: %p\n", AgentA.AID(&AgentA));
+				//printf("AID del Agente B: %p\n", AgentB.AID(&AgentB));
+				//printf("Nombre del Agente que envio el mensaje: %s\n", Platform.get_Agent_description(&Platform, AgentA.AID(&AgentA)).agent_name);
+				//printf("Nombre del Agente que envio el mensaje: %s\n",Platform.get_Agent_description(&Platform, AgentB.AID(&AgentB)).agent_name);//Por alguna razon el AID del agente B es el del referee
+				//printf("Nombre del Agente que envio el mensaje: %s\n", Platform.get_Agent_description(&Platform, Referee.AID(&Referee)).agent_name);
+				//printf("AID del Agente Referee: %p\n", Referee.AID(&Referee));
+				msgB = Behaviour->msg->get_msg_content(Behaviour->msg);
 				choiceB = choices(msgB);
 			}
-			printf("Llegue al suspend\n");
-			printf("");
-			msg_watchover.suspend(&msg_watchover,msg_watchover.get_sender(&msg_watchover));
-			printf("sali del suspend\n");
+			//printf("Llegue al suspend\n");
+			//printf("");
+			//printf("Se suspende a: %p\n", Behaviour->msg->get_sender(Behaviour->msg));
+			Behaviour->msg->suspend(Behaviour->msg, Behaviour->msg->get_sender(Behaviour->msg));
+			//printf("sali del suspend\n");
 		}
 		if (Platform.get_state(&Platform,AgentA.AID(&AgentA)) == SUSPENDED && Platform.get_state(&Platform,AgentB.AID(&AgentB)) == SUSPENDED) {
 			break;
 		}
 	}
-	printf("Llegue al switch\n");
+	//printf("Llegue al switch\n");
+	Agent_info RefereeInfo = Platform.get_Agent_description(Platform.get_running_agent(&Platform));
 	switch (winner[choiceA][choiceB])
 	{
 	case 0:
-		printf(Platform.get_Agent_description(&Platform,Platform.get_running_agent(&Platform))->agent_name);
+		printf("\n");
+		printf(RefereeInfo.agent_name);
 		printf(": DRAW!\n");
 		break;
 
 	case 1:
-		printf(Platform.get_Agent_description(&Platform, Platform.get_running_agent(&Platform))->agent_name);
+		printf("\n");
+		printf(RefereeInfo.agent_name);
 		printf(": PLAYER A WINS!\n");
 		break;
 
 	case 2:
-		printf(Platform.get_Agent_description(&Platform, Platform.get_running_agent(&Platform))->agent_name);
+		printf("\n");
+		printf(RefereeInfo.agent_name);
 		printf(": PLAYER B WINS!\n");
 		break;
 
@@ -155,16 +179,19 @@ void watchoverAction(void* behaviour) {
 		break;
 	}
 	Platform.agent_wait(&Platform,pdMS_TO_TICKS(2000));
-	msg_watchover.resume(&msg_watchover,AgentA.AID(&AgentA));
-	msg_watchover.resume(&msg_watchover,AgentB.AID(&AgentB));
+	Behaviour->msg->resume(Behaviour->msg,AgentA.AID(&AgentA));
+	Behaviour->msg->resume(Behaviour->msg,AgentB.AID(&AgentB));
 	printf("-------------------PLAYING AGAIN---------------------\n");
 };
 
-void watchover(void* behaviour) {
-	printf("Entre a watchover\n");
+void watchover(void* pvParameters) {
+	watchoverBehaviour.msg = &msg_watchover;
+	//printf("Entre a watchover\n");
 	watchoverBehaviour.setup = &watchoverSetup;
 	watchoverBehaviour.action = &watchoverAction;
-	watchoverBehaviour.execute(&watchoverBehaviour);
+	for (;;) {
+		watchoverBehaviour.execute(&watchoverBehaviour, &pvParameters);
+	}
 };
 
 
@@ -175,18 +202,22 @@ int rock_paper_scissors() {
 	ConstructorAgente(&Referee);
 	ConstructorSysVars(&env);
 	ConstructorAgent_Platform(&Platform, &env);
-	ConstructorAgent_Msg(&msg_play, &env);
+	ConstructorAgent_Msg(&msg_playA, &env);
+	ConstructorAgent_Msg(&msg_playB, &env);
 	ConstructorAgent_Msg(&msg_watchover, &env);
-	ConstructorCyclicBehaviour(&playBehaviour);
+	ConstructorCyclicBehaviour(&playBehaviourA);
+	ConstructorCyclicBehaviour(&playBehaviourB);
 	ConstructorOneShotBehaviour(&watchoverBehaviour);
-	AgentA.Iniciador(&AgentA, "Player A", 1, 128);
-	AgentB.Iniciador(&AgentB, "Player B", 1, 128);
-	Referee.Iniciador(&Referee, "Referee", 2, 128);
+	AgentA.Iniciador(&AgentA, "Player A", 1, 20);
+	AgentB.Iniciador(&AgentB, "Player B", 1, 20);
+	Referee.Iniciador(&Referee, "Referee", 2, 20);
 	Platform.Agent_Platform(&Platform, "RPS_platform");
 	printf("MAES DEMO \n");
-	Platform.agent_init(&Platform,&AgentA, &play);
-	Platform.agent_init(&Platform, &AgentB, &play);
+	Platform.agent_init(&Platform,&AgentA, &playA);
+	Platform.agent_init(&Platform, &AgentB, &playB);
 	Platform.agent_init(&Platform, &Referee, &watchover);
+	//printf("AID de Player A: %p\n", AgentA.AID(&AgentA));
+	//printf("AID de Player B: %p\n", AgentB.AID(&AgentB));
 	//printf("Pase los agent inits");
 	Platform.boot(&Platform);
 	printf("Boot exitoso \n");

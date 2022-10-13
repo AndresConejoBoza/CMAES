@@ -5,7 +5,9 @@
 
 
 
-
+//Get Task Environment: This function locates an Agent in the environment using its AID. Then, it returns a pointer to the Agent. 
+//Inputs: The environment used and the AID.
+//Outputs: Pointer to the Agent or NULL in case that the Agent was not found.
 MAESAgent* get_taskEnvFunction(sysVars* Vars, Agent_AID aid) {
 	//printf("Entre a get task env y recibi este aid: %s\n", aid);;
 	MAESUBaseType_t i = 0;
@@ -13,6 +15,7 @@ MAESAgent* get_taskEnvFunction(sysVars* Vars, Agent_AID aid) {
 	{
 		if (Vars->environment[i].first == aid && aid!=NULL)
 		{
+			//printf("Nombre de la entrada %i revisada en el ambiente en la func gettaskenv: %s\n",i, Vars->environment[i].second->agent.agent_name);
 			//printf("Retorne algo diferente de nulo en gettaskenv con la direccion: %p\n", Vars->environment[i].second);
 			return Vars->environment[i].second;
 		}
@@ -23,6 +26,10 @@ MAESAgent* get_taskEnvFunction(sysVars* Vars, Agent_AID aid) {
 	//return environment[aid];
 };
 
+
+//Set Task Environment Function: This function registers an Agent in the environment.
+//Inputs: The environment, the AID and a pointer to the Agent.
+//Outputs: None.
 void set_TaskEnvFunction(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
@@ -38,7 +45,9 @@ void set_TaskEnvFunction(sysVars* Vars, Agent_AID aid, MAESAgent* agent_ptr) {
 	//environment.insert(make_pair(aid, agent_ptr));
 };
 
-
+//Erase Task Environment Function: This function erases an Agent in the environment.
+//Inputs: The environment and the AID.
+//Outputs: None.
 void erase_TaskEnvFunction(sysVars* Vars, Agent_AID aid) {
 	MAESUBaseType_t i = 0;
 	while (i < AGENT_LIST_SIZE)
@@ -60,15 +69,19 @@ void erase_TaskEnvFunction(sysVars* Vars, Agent_AID aid) {
 	//environment.erase(aid);
 };
 
-
+//Get Environment Function: This function returns the struct in which the environment is held.
+//Inputs: The environment.
+//Outputs: a sysVar struct that contains the environment.
 sysVar* getEnvFunction(sysVars* Vars) {
-	return Vars->environment;  //Revisar este porque normalmente devuelve el enviroment, en este caso está devolviendo el puntero, no sé si afectará.
+	return Vars->environment;  //Revisar este porque normalmente devuelve el environment, en este caso está devolviendo el puntero, no sé si afectará.
 	//No tira errores si le quito el & del puntero.
 };
 
 
 
-
+//SysVars Constructor: This function assigns the class pointers to its corresponding function.
+//Inputs: Ponter to the SysVars class.
+//Outputs: None.
 void ConstructorSysVars(sysVars* Vars) {
 	Vars->get_taskEnv = &get_taskEnvFunction;
 	Vars->set_TaskEnv = &set_TaskEnvFunction;

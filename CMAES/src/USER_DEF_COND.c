@@ -18,12 +18,12 @@ bool deregister_condFunction(USER_DEF_COND* cond)
     return true;
 }
 
-bool suspend_condFunction(USER_DEF_COND* cond)
+bool suspend_condFunction()
 {
     return true;
 }
 
-bool resume_condFunction(USER_DEF_COND* cond)
+bool resume_condFunction()
 {
     return true;
 }
