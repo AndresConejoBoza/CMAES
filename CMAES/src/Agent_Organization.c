@@ -327,7 +327,6 @@ MSG_TYPE inviteFunction(Agent_Organization* Organization, Agent_Msg msg, UBaseTy
 	{
 		msg.set_msg_type(&msg,PROPOSE);
 		msg.set_msg_content(&msg,(char*)"Join Organization");
-		// msg.set_msg_int(password);
 		msg.send(&msg,target_agent, timeout);
 
 		msg.receive(&msg,timeout);

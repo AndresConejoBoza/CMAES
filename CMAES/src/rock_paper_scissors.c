@@ -18,7 +18,6 @@ int bet;
 
 //Funcion aleatoria
 int getRandom() {
-	//printf("numero generado: %i", rand() % 2);
 	return rand()%2;
 };
 
@@ -44,9 +43,6 @@ void playSetup(CyclicBehaviour* Behaviour, void* pvParameters) {
 };
 
 void playAction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	//printf("Caller: %p\n", Behaviour->msg->caller);
-	//printf("%p\n", msg_playA.caller);
-	//printf("%p\n", msg_playB.caller);
 	Agent_info informacion = Platform.get_Agent_description(Platform.get_running_agent(&Platform));
 	printf("Player: %s\n",informacion.agent_name);
 	printf(": Rock, Paper, Scissors... \n");
@@ -71,7 +67,6 @@ void playAction(CyclicBehaviour* Behaviour, void* pvParameters) {
 		break;
 	}
 	Behaviour->msg->set_msg_content(Behaviour->msg, bet);
-	//printf("Paso el set content\n");
 	Behaviour->msg->set_msg_type(Behaviour->msg, INFORM);
 	Behaviour->msg->send0(Behaviour->msg);
 };
@@ -117,43 +112,27 @@ void watchoverAction(OneShotBehaviour* Behaviour, void* pvParameters) {
 		Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
 		if (Behaviour->msg->get_msg_type(Behaviour->msg) == INFORM)
 		{
-			//printf("\nPlaying now: \n");
 			Agent_info PlayerInfo = Platform.get_Agent_description(Behaviour->msg->get_sender(Behaviour->msg));
-			//printf("\n");
 			printf(PlayerInfo.agent_name);
 			printf(": ");
 			printf(Behaviour->msg->get_msg_content(Behaviour->msg));
 			printf("\n");
 			if (Behaviour->msg->get_sender(Behaviour->msg) == AgentA.AID(&AgentA))
 			{
-				//printf("El sender era el Agente A\n");
 				msgA = Behaviour->msg->get_msg_content(Behaviour->msg);
 				choiceA = choices(msgA);
 			}
 			else if (Behaviour->msg->get_sender(Behaviour->msg) == AgentB.AID(&AgentB))
 			{
-				//printf("El sender era el Agente B\n");
-				//printf("AID del Agente que envio el mensaje: %p\n", msg_watchover.get_sender(&msg_watchover));
-				//printf("AID del Agente B: %p\n", AgentA.AID(&AgentA));
-				//printf("AID del Agente B: %p\n", AgentB.AID(&AgentB));
-				//printf("Nombre del Agente que envio el mensaje: %s\n", Platform.get_Agent_description(&Platform, AgentA.AID(&AgentA)).agent_name);
-				//printf("Nombre del Agente que envio el mensaje: %s\n",Platform.get_Agent_description(&Platform, AgentB.AID(&AgentB)).agent_name);//Por alguna razon el AID del agente B es el del referee
-				//printf("Nombre del Agente que envio el mensaje: %s\n", Platform.get_Agent_description(&Platform, Referee.AID(&Referee)).agent_name);
-				//printf("AID del Agente Referee: %p\n", Referee.AID(&Referee));
 				msgB = Behaviour->msg->get_msg_content(Behaviour->msg);
 				choiceB = choices(msgB);
 			}
-			//printf("Llegue al suspend\n");
-			//printf("");
-			//printf("Se suspende a: %p\n", Behaviour->msg->get_sender(Behaviour->msg));
 			Behaviour->msg->suspend(Behaviour->msg, Behaviour->msg->get_sender(Behaviour->msg));
-			//printf("sali del suspend\n");
 		}
 		if (Platform.get_state(&Platform,AgentA.AID(&AgentA)) == SUSPENDED && Platform.get_state(&Platform,AgentB.AID(&AgentB)) == SUSPENDED) {
 			break;
 		}
 	}
-	//printf("Llegue al switch\n");
 	Agent_info RefereeInfo = Platform.get_Agent_description(Platform.get_running_agent(&Platform));
 	switch (winner[choiceA][choiceB])
 	{
@@ -186,7 +165,6 @@ void watchoverAction(OneShotBehaviour* Behaviour, void* pvParameters) {
 
 void watchover(void* pvParameters) {
 	watchoverBehaviour.msg = &msg_watchover;
-	//printf("Entre a watchover\n");
 	watchoverBehaviour.setup = &watchoverSetup;
 	watchoverBehaviour.action = &watchoverAction;
 	for (;;) {
@@ -216,9 +194,6 @@ int rock_paper_scissors() {
 	Platform.agent_init(&Platform,&AgentA, &playA);
 	Platform.agent_init(&Platform, &AgentB, &playB);
 	Platform.agent_init(&Platform, &Referee, &watchover);
-	//printf("AID de Player A: %p\n", AgentA.AID(&AgentA));
-	//printf("AID de Player B: %p\n", AgentB.AID(&AgentB));
-	//printf("Pase los agent inits");
 	Platform.boot(&Platform);
 	printf("Boot exitoso \n");
 	/* Start the scheduler so the created tasks start executing. */

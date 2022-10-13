@@ -4,24 +4,12 @@
 #include <stdbool.h>
 
 void AMS_taskFunction(void* pvParameters) {
-	//printf("\nEntre a AMS task function\n");
 	AMSparameter* amsParameters = (AMSparameter*)pvParameters;
-	//bool pruebacond = amsParameters->cond->suspend_cond();
-	//printf("Direccion ptr_env antes de inicializacion: %p\n", &amsParameters->ptr_env);
-	//ConstructorSysVars(&amsParameters->ptr_env);
-	//printf("Direccion ptr_env despues de inicializacion: %p\n", &amsParameters->ptr_env);
 	USER_DEF_COND* cond = amsParameters->cond;
-	//bool pruebacond = cond->suspend_cond();
 	Agent_Platform* services = amsParameters->services;
 	Agent_Msg msg;
-	//printf("Estoy en AMS, la direccion de gettaskenv de amsparameters es: %p\n", &amsParameters->ptr_env->get_taskEnv);
-	//printf("\nEl valor del puntero hacia el env es: %p\n", &amsParameters->ptr_env);
-	//printf("\nEl valor del puntero hacia el env es: %p\n", amsParameters->ptr_env);
 	ConstructorAgent_Msg(&msg, amsParameters->ptr_env);
 	msg.Agent_Msg(&msg);
-	//printf("\nUUUUUUUUUEl valor del puntero hacia el env en MSG es: %p\n", &msg.ptr_env);
-	//printf("\nDireccion de gettaskenv de msg: %p\n", &msg.ptr_env->get_taskEnv);
-	//printf("\nUUUUUUUUUEl valor del puntero hacia el env en MSG es: %s\n", msg.ptr_env);
 	MAESUBaseType_t error_msg = 0;
 	for (;;)
 	{
@@ -30,7 +18,7 @@ void AMS_taskFunction(void* pvParameters) {
 		{
 			if (strcmp(msg.get_msg_content(&msg), "KILL") == 0)
 			{
-				if (cond->kill_cond(cond))
+				if (cond->kill_cond())
 				{
 					error_msg = services->kill_agent(services, msg.get_target_agent(&msg));
 					if (error_msg == NO_ERRORS)
@@ -51,7 +39,7 @@ void AMS_taskFunction(void* pvParameters) {
 
 			else if (strcmp(msg.get_msg_content(&msg), "REGISTER") == 0)
 			{
-				if (cond->register_cond(cond))
+				if (cond->register_cond())
 				{
 					error_msg = services->register_agent(services, msg.get_target_agent(&msg));
 					if (error_msg == NO_ERRORS)
@@ -72,7 +60,7 @@ void AMS_taskFunction(void* pvParameters) {
 
 			else if (strcmp(msg.get_msg_content(&msg), "DEREGISTER") == 0)
 			{
-				if (cond->deregister_cond(cond))
+				if (cond->deregister_cond())
 				{
 					error_msg = services->deregister_agent(services, msg.get_target_agent(&msg));
 					if (error_msg == NO_ERRORS)
@@ -93,7 +81,6 @@ void AMS_taskFunction(void* pvParameters) {
 
 			else if (strcmp(msg.get_msg_content(&msg), "SUSPEND") == 0)
 			{
-				//bool condprueba = cond->suspend_cond();
 				if (cond->suspend_cond())
 				{
 					error_msg = services->suspend_agent(services, msg.get_target_agent(&msg));
@@ -136,7 +123,7 @@ void AMS_taskFunction(void* pvParameters) {
 
 			else if (strcmp(msg.get_msg_content(&msg), "RESTART") == 0)
 			{
-				if (cond->restart_cond(cond))
+				if (cond->restart_cond())
 				{
 					services->restart(services, msg.get_target_agent(&msg));
 				}
@@ -169,7 +156,6 @@ void Agent_PlatformFunction(Agent_Platform* platform, const char* name) {
 	platform->description.AP_name = name;
 	platform->description.subscribers = 0;
 	platform->ptr_cond = &platform->cond;
-	//////////////////////bool pruebacond = platform->ptr_cond->suspend_cond();
 	platform->agentAMS.agent.priority = configMAX_PRIORITIES - 1;
 	for (MAESUBaseType_t i = 0; i < AGENT_LIST_SIZE; i++)
 	{
@@ -191,48 +177,24 @@ void Agent_PlatformWithCondFunction(Agent_Platform* platform, const char* name, 
 
 
 bool bootFunction(Agent_Platform* platform) {
-	//printf("\n Entre a la funcion de boot\n");
-
 	if (xTaskGetCurrentTaskHandle() == NULL)
 	{
-		//printf("\nSí entró a la condición de xtaskgetcurrenttaskhandle!=NULL\n");
-		//ConstructorAMS(&parameters);
-		// Mailbox = Queue
-
 		ConstructorAgente(&platform->agentAMS);
 		platform->agentAMS.Iniciador(&platform->agentAMS, "AMSAgent", (configMAX_PRIORITIES - 1), 1024);
-
 		platform->agentAMS.agent.mailbox_handle = xQueueCreate(1, sizeof(MsgObj));
-
 		// Task
 		platform->parameter->cond=platform->ptr_cond;
 		platform->parameter->services = platform;
-		//AP_Description* pruebas=platform->get_AP_description(platform);
 		platform->parameter->ptr_env = &env;
-		//printf("Estoy en plataforma, la direccion de get task env es: %p\n", &env.get_taskEnv);
-		//parametersForTask->ptr_env = &env;
-		//parametersForTask->services = platform; //Esto era = this. Según entendí, esto hace referencia a esta misma instancia. 
-		//parametersForTask->cond = platform->ptr_cond;
-		//bool pruebacond = parametersForTask->cond->suspend_cond();
-		//printf("Estoy en plataforma justo despues de asignar parametersfortask, la direccion de gettaskenv en dicha instancia es: %p\n", &parametersForTask.ptr_env->get_taskEnv);
-		platform->agentAMS.resources.stackSize = configMINIMAL_STACK_SIZE; /*--------------------------------------------------------*/
-		//printf("\n Llegue al xtaskcreate\n");
-		//printf("\n Dirección donde está apuntando la función de parametersfortask: %p\n", &AMS_taskFunction);
-		//printf("\WWWWWWWAID de la task: %s\n", platform->agentAMS.agent.aid);
-		//printf("\nEste es el valor del ptr_env enviado a la task de AMS: %p",&parametersForTask.ptr_env);
+		platform->agentAMS.resources.stackSize = configMINIMAL_STACK_SIZE;
 		xTaskCreate(AMS_taskFunction, platform->agentAMS.agent.agent_name, platform->agentAMS.resources.stackSize, (void*)platform->parameter, (configMAX_PRIORITIES - 1), &platform->agentAMS.agent.aid);
-		//printf("\n Logre pasar el xtaskcreate\n");
-		//printf("\WWWWWWWAID de la task: %s\n", platform->agentAMS.agent.aid);
 		platform->description.AMS_AID = platform->agentAMS.agent.aid;
 		env.set_TaskEnv(&env,platform->agentAMS.agent.aid, &platform->agentAMS);
-		//printf("\nLlegue al platform->agentAMS.agent.aid != NULL\n");
 		if (platform->agentAMS.agent.aid != NULL)
 		{
 			sysVar* element;
 			MAESUBaseType_t i = 0;
-
 			while (i < AGENT_LIST_SIZE) {
-				//printf("\nValor de i dentro del ciclo de AP boot: %i\n", i);
 				element = env.getEnv(&env);
 
 				if ((element[i].first == NULL) || (platform->agentAMS.agent.aid == NULL))
@@ -242,21 +204,16 @@ bool bootFunction(Agent_Platform* platform) {
 				platform->register_agent(platform,element[i].first);
 				i++;
 			}
-			//printf("Esto tiene el env como primer aid: %s\n", parametersForTask.ptr_env->environment[0].second->agent.agent_name);
-			//printf("Esto tiene el env como segundo aid: %s\n", parametersForTask.ptr_env->environment[1].second->agent.agent_name);
-			//printf("Esto tiene el env como tercer aid: %s\n", parametersForTask.ptr_env->environment[2].second->agent.agent_name);
 			return NO_ERRORS;
 		}
 		else
 		{
-			//printf("\n Tiró system abort\n");
 			/* System_abort */
 			return INVALID;
 		}
 	}
 	else
 	{
-		//printf("\n Tiró system invalid\n");
 		return INVALID;
 	}
 };
@@ -266,23 +223,12 @@ void agent_initFunction(Agent_Platform* platform, MAESAgent* agent, void* behavi
 	{
 		// Mailbox
 		agent->agent.mailbox_handle = xQueueCreate(1, sizeof(MsgObj));
-		//printf("\n agarre el xqueuecreate\n");
 		// Task
 		agent->resources.function = &behaviour;
 		agent->resources.taskParameters = NULL;
-
-		//printf("\nAAAAACual es el valor del aid de Agent Sender?: %s\n", agent->agent.aid);
-		//printf("Nombre del inicializado: %s\n", agent->agent.agent_name);
-		//printf("Direecion enviada behaviour: %p\n", behaviour);
-		//printf("Direccion enviada por el xtascreate en su cuarta entrada: %p\n", &(void*)behaviour);
 		xTaskCreate(behaviour, agent->agent.agent_name, agent->resources.stackSize, (void*)behaviour, 0, &agent->agent.aid);
-		//printf("\nse supone que aqui cree un task\n");
-		//printf("\nEste es el aid que se está guardando: %s\n", agent->agent.agent_name);
-		//printf("Cual agente guarde dentro del env: %s\n", agent->agent.agent_name);
 		env.set_TaskEnv(&env,agent->agent.aid, agent);
-		//printf("\nCual es el valor del aid de Agent Sender?: %s\n", agent->agent.aid);
 		vTaskSuspend(agent->agent.aid);
-		//printf("Termino una etapa del init\n");
 	}
 };
 
@@ -291,15 +237,10 @@ void agent_initConParamFunction(Agent_Platform* platform, MAESAgent* agent, void
 	{
 		// Mailbox
 		agent->agent.mailbox_handle = xQueueCreate(1, sizeof(MsgObj));
-
 		// Task
 		agent->resources.function = behaviour;
 		agent->resources.taskParameters = pvParameters;
-
-
 		xTaskCreate(behaviour, agent->agent.agent_name, agent->resources.stackSize, pvParameters, 0, &agent->agent.aid);
-
-		//printf("Cual agente guarde dentro del env: %s\n", agent->agent.agent_name);
 		env.set_TaskEnv(&env,agent->agent.aid, agent);
 		vTaskSuspend(agent->agent.aid);
 	}
@@ -361,15 +302,7 @@ AGENT_MODE get_stateFunction(Agent_Platform* platform, Agent_AID aid) {
 
 Agent_info get_Agent_descriptionFunction(Agent_AID aid) {
 	Agent_AID test = aid;
-	//printf("Direccion AID entregado al get description function: %p\n", &aid);
-	//printf("valor AID entregado al get description function: %p\n", aid);
-	//aid_t = Platform.get_running_agent(&Platform);
-	//printf("Segundo AID generado: %p\n", aid_t);
-	//MAESAgent* a = env.get_taskEnv(&env, aid);
 	MAESAgent* a = (MAESAgent*)env.get_taskEnv(&env, aid);
-	//printf("Direccion retornada por gettaskenv : %p\n", env.get_taskEnv(&env, aid));
-	//printf("Direccion de a->agent: %p\n", &a->agent);
-	//printf("Direccion de a: %p\n", &a);
 	return a->agent;
 };
 
@@ -378,12 +311,9 @@ AP_Description get_AP_descriptionFunction(Agent_Platform* platform) {
 };
 
 ERROR_CODE register_agentFunction(Agent_Platform* platform, Agent_AID aid) {
-	//printf("\nEntre a register agent\n");
 	if (aid == NULL)
 	{
-		//printf("\nMe tiró Handle-null\n");
-		return HANDLE_NULL;
-		
+		return HANDLE_NULL;	
 	}
 	else if (xTaskGetCurrentTaskHandle() == NULL || uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -393,14 +323,10 @@ ERROR_CODE register_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 			{
 				MAESAgent* a;
 				a = env.get_taskEnv(&env, aid);
-				//printf("el nombre del agente sacado es: %s", a->agent.agent_name); //Todo funciona bien por el momento. Me sacó agent sender, receiver y uno NULL
 				a->agent.AP = platform->agentAMS.agent.aid;
 				platform->Agent_Handle[platform->description.subscribers] = aid;
 				platform->description.subscribers++;
-				//printf("El nombre del agente es %s y la prioridad asignada es de: %i", a->agent.agent_name, a->agent.priority);
 				vTaskPrioritySet(aid, a->agent.priority);
-				//printf("El nombre del agente es %s y la prioridad asignada es de: %i", a->agent.agent_name, a->agent.priority);
-				//printf("PASE EL VTASKPRIORITY");
 				vTaskResume(aid);
 				return NO_ERRORS;
 			}
@@ -452,10 +378,6 @@ ERROR_CODE deregister_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 			return NOT_FOUND;
 		}
 	}
-	//else
-	//{
-		//return NO_ERRORS;
-	//}
 	return NO_ERRORS;
 };
 
@@ -472,7 +394,7 @@ ERROR_CODE kill_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 
 			a = (MAESAgent*)env.get_taskEnv(&env, aid);;
 			a->agent.aid = NULL;
-			m = a->agent.mailbox_handle; //A esto hay que agregarle algo, pero no me tira error por el momento
+			m = a->agent.mailbox_handle;
 			vQueueDelete(m);
 			vTaskDelete(aid);
 			
@@ -493,7 +415,7 @@ ERROR_CODE suspend_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 		if (platform->agent_search(platform,aid))
 		{
 			vTaskSuspend(aid);
-			return (NO_ERRORS); /* code */
+			return (NO_ERRORS); 
 		}
 		else
 		{
@@ -534,29 +456,18 @@ void restartFunction(Agent_Platform* platform, Agent_AID aid) {
 		MAESAgent* a;
 		a = (MAESAgent*)env.get_taskEnv(&env, aid);
 		Mailbox_Handle m;
-
 		// delete Task and Mailbox
-
-		m = a->agent.mailbox_handle; //Esto tiene algo raro, debería de pedir algo, no?
+		m = a->agent.mailbox_handle; 
 		vTaskDelete(aid);
 		vQueueDelete(m);
-		 //Tema del env;
 		env.erase_TaskEnv(&env,aid);
-
 		// Mailbox = Queue
-
 		a->agent.mailbox_handle = xQueueCreate(1, sizeof(MSG_TYPE));
-
 		// Task
-
-
 		xTaskCreate(a->resources.function, a->agent.agent_name, a->resources.stackSize, a->resources.taskParameters, 0, &a->agent.aid);
 		env.set_TaskEnv(&env,a->agent.aid, a);
 	}
 };
-
-
-
 
 
 void ConstructorAgent_Platform(Agent_Platform* platform, sysVars* env) {

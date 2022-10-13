@@ -28,59 +28,47 @@ Agent_Platform Platform;
 sysVars env;
 CyclicBehaviour CurrentBehaviour,VoltageBehaviour,TemperatureBehaviour, genBehaviour;
 Agent_Msg msg_current,msg_voltage,msg_temperature, msg_gen;
-logger_info log_current, log_voltage, log_temperature, *info;
+logger_info log_current, log_voltage, log_temperature, *info, *infox;
 portFLOAT min, max, value;
 char response[50];
 
 
 
 void loggerAction(CyclicBehaviour* Behaviour,void* pvParameters) {
-	printf("Entre a logger action\n");
-	//info = (logger_info*)pvParameters;
-	printf("Vamos a ver si algo llego a logger info: %i\n", info->rate);
-	Behaviour->msg->Agent_Msg(Behaviour->msg);
+	info= (logger_info*)pvParameters;
 	Behaviour->msg->set_msg_content(Behaviour->msg, (char*)info->type);
 	Behaviour->msg->send(Behaviour->msg, measurement.AID(&measurement), portMAX_DELAY);
 	Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
 
 	/*Logging*/
-	printf("%s\n", Behaviour->msg->get_msg_content(&Behaviour->msg));
+	printf("%s\n", Behaviour->msg->get_msg_content(Behaviour->msg));
 	Platform.agent_wait(&Platform,pdMS_TO_TICKS(info->rate));
-	printf("Cuanto tiene que esperarse: %i\n", info->rate);
-	printf("Cantidad de ticks: %i\n", info->rate);
 };
 
 void Currentlogger(void* pvParameters) {
-	info = (logger_info*)pvParameters;
-	//printf("Vamos a ver si algo llego a logger INICIAL info: %i\n", info->rate);
-	//printf("Entre a logger\n");
 	CurrentBehaviour.msg = &msg_current;
+	CurrentBehaviour.msg->Agent_Msg(CurrentBehaviour.msg);
 	CurrentBehaviour.action = &loggerAction;
-	CurrentBehaviour.execute(&CurrentBehaviour, &pvParameters);
+	CurrentBehaviour.execute(&CurrentBehaviour, pvParameters);
 };
 
 void Voltagelogger(void* pvParameters) {
-	info = (logger_info*)pvParameters;
-	//printf("Vamos a ver si algo llego a logger INICIAL info: %i\n", info->rate);
-	//printf("Entre a logger\n");
 	VoltageBehaviour.msg = &msg_voltage;
+	VoltageBehaviour.msg->Agent_Msg(VoltageBehaviour.msg);
 	VoltageBehaviour.action = &loggerAction;
-	VoltageBehaviour.execute(&VoltageBehaviour, &pvParameters);
+	VoltageBehaviour.execute(&VoltageBehaviour, pvParameters);
 };
 
 void Temperaturelogger(void* pvParameters) {
-	info = (logger_info*)pvParameters;
-	//printf("Vamos a ver si algo llego a logger INICIAL info: %i\n", info->rate);
-	//printf("Entre a logger\n");
 	TemperatureBehaviour.msg = &msg_temperature;
+	TemperatureBehaviour.msg->Agent_Msg(TemperatureBehaviour.msg);
 	TemperatureBehaviour.action = &loggerAction;
-	TemperatureBehaviour.execute(&TemperatureBehaviour, &pvParameters);
+	TemperatureBehaviour.execute(&TemperatureBehaviour, pvParameters);
 };
 
 void genAction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	Behaviour->msg->Agent_Msg(Behaviour->msg);
 	Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
-	printf("Mensaje recibido: %i\n", (int)Behaviour->msg->get_msg_content(Behaviour->msg));
+	int i = (int)Behaviour->msg->get_msg_content(Behaviour->msg);
 	switch ((int)Behaviour->msg->get_msg_content(Behaviour->msg))
 	{
 	case CURRENT:
@@ -106,15 +94,17 @@ void genAction(CyclicBehaviour* Behaviour, void* pvParameters) {
 
 	default:
 		snprintf(response, 50, "\r\nNot understood");
+		printf(response);
 		break;
 	}
 
 	Behaviour->msg->set_msg_content(Behaviour->msg,response);
-	Behaviour->msg->send(&msg_gen, msg_gen.get_sender(Behaviour->msg), portMAX_DELAY);
+	Behaviour->msg->send(Behaviour->msg, Behaviour->msg->get_sender(Behaviour->msg), portMAX_DELAY);
 };
 
 void gen(void* pvParameters) {
 	genBehaviour.msg = &msg_gen;
+	genBehaviour.msg->Agent_Msg(genBehaviour.msg);
 	genBehaviour.action = &genAction;
 	genBehaviour.execute(&genBehaviour, &pvParameters);
 };
@@ -143,22 +133,18 @@ int telemetry() {
 	ConstructorCyclicBehaviour(&VoltageBehaviour);
 	ConstructorCyclicBehaviour(&TemperatureBehaviour);
 	ConstructorCyclicBehaviour(&genBehaviour);
-	logger_current.Iniciador(&logger_current, "Current Logger", 3, 128);
-	logger_voltage.Iniciador(&logger_voltage, "Voltage Logger", 2, 128);
-	logger_temperature.Iniciador(&logger_temperature, "Temperature Logger", 1, 128);
-	measurement.Iniciador(&measurement, "Measure", 3, 128);
+	logger_current.Iniciador(&logger_current, "Current Logger", 3, 10);
+	logger_voltage.Iniciador(&logger_voltage, "Voltage Logger", 2, 10);
+	logger_temperature.Iniciador(&logger_temperature, "Temperature Logger", 1, 10);
+	measurement.Iniciador(&measurement, "Measure", 3, 10);
 	Platform.Agent_Platform(&Platform, "telemetry_platform");
 
 
 
 	Platform.agent_initConParam(&Platform,&logger_current, &Currentlogger, (void*)&log_current);
-	//printf("Current iniciado\n");
 	Platform.agent_initConParam(&Platform, &logger_voltage, &Voltagelogger, (void*)&log_voltage);
-	//printf("Voltage iniciado\n");
 	Platform.agent_initConParam(&Platform, &logger_temperature, &Temperaturelogger, (void*)&log_temperature);
-	//printf("Temp iniciado\n");
 	Platform.agent_init(&Platform, &measurement, &gen);
-	//printf("Measurement iniciado\n");
 	Platform.boot(&Platform);
 	printf("Boot exitoso \n");
 	/* Start the scheduler so the created tasks start executing. */

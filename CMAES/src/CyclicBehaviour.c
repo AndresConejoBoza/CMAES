@@ -4,16 +4,12 @@
 #include <stdbool.h>
 
 
-//void CreateCyclicBehaviourFunction(CyclicBehaviour* Behaviour) {
-	//No tiene nada
-//};
-
 void actionFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	// Según la programación original, asignaba un =0
+	// Empty
 };
 
 void setupFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	//No tiene nada
+	// Empty
 };
 
 bool doneFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
@@ -25,21 +21,18 @@ bool failure_detectionFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 };
 
 void failure_identificationFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	//No tiene nada
+	// Empty
 };
 
 void failure_recoveryFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	//No tiene nada
+	// Empty
 };
 
 void executeFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	//printf("Entre a la ejecucion del behavior\n");
 	Behaviour->setup(Behaviour, pvParameters);
 	do
 	{
-		//printf("Estoy metido dentro del ciclo del behaviour\n");
 		Behaviour->action(Behaviour, pvParameters);
-		//printf("Llegue a comparar si hay deteccion de fallas\n");
 		if (Behaviour->failure_detection(Behaviour, pvParameters))
 		{
 			Behaviour->failure_identification(Behaviour, pvParameters);
@@ -50,7 +43,6 @@ void executeFunction(CyclicBehaviour* Behaviour, void* pvParameters) {
 
 
 void ConstructorCyclicBehaviour(CyclicBehaviour* Behaviour) {
-	//Behaviour->CreateCyclicBehaviour = &CreateCyclicBehaviourFunction;
 	Behaviour->action = &actionFunction;
 	Behaviour->setup = &setupFunction;
 	Behaviour->done = &doneFunction;

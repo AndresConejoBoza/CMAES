@@ -17,11 +17,6 @@ CyclicBehaviour writingBehaviour, readingBehaviour;
 Agent_Msg msg_writing, msg_reading;
 
 
-
-
-
-
-
 //Functions related to the writing Behaviour//
 
 void writingsetup(CyclicBehaviour* Behaviour, void* pvParameters) {
@@ -36,7 +31,6 @@ void writingaction(CyclicBehaviour* Behaviour, void* pvParameters) {
 };
 
 void write(void* pvParameters) {
-	//printf("\nEntreeeeee al write\n");
 	writingBehaviour.msg = &msg_writing;
 	writingBehaviour.setup = &writingsetup;
 	writingBehaviour.action = &writingaction;
@@ -46,9 +40,7 @@ void write(void* pvParameters) {
 
 //Functions related to the reading Behaviour
 
-
 void readingaction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	//printf("Entre a readingaction\n");
 	printf("Esperando... \n");
 	Behaviour->msg->Agent_Msg(Behaviour->msg);
 	Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
@@ -56,15 +48,6 @@ void readingaction(CyclicBehaviour* Behaviour, void* pvParameters) {
 };
 
 void read(void* pvParameters) {
-	/*
-	printf("direccion recibida del behaviour: %p\n", &Behaviour);
-	CyclicBehaviour* readingBehaviour = &(CyclicBehaviour*)Behaviour;
-	printf("Direccion del readingbehaviour: %p\n", &readingBehaviour);
-	printf("Direccion del puntero hacia readingbehaviouraction: %p\n", &readingBehaviour->action);
-	printf("Entre??????????????");
-	ConstructorCyclicBehaviour(readingBehaviour);
-	*/
-	//printf("Entre a read behaviour\n");
 	readingBehaviour.msg = &msg_reading;
 	readingBehaviour.action = &readingaction;
 	readingBehaviour.execute(&readingBehaviour,&pvParameters);
@@ -92,11 +75,7 @@ int sender_receiver() {
 	//Registering the Agents and their respective behaviour into the Platform
 	printf("MAES DEMO \n");
 	AP.agent_init(&AP,&sender, &write);
-	printf("Mensajero Listo \n");
-	//printf("\nDireccion de writingsetup: %p\n", &writingsetup);
-	//printf("\nDireccion asignada dentro del writingBehaviour de writingsetup: %p\n", &writingBehaviour.setup);
 	AP.agent_init(&AP,&receiver, &read);
-	printf("Receptor Listo \n");
 	AP.boot(&AP);
 	printf("Boot exitoso \n");
 

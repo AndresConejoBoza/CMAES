@@ -3,16 +3,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-//void CreateOneShotBehaviourFunction(OneShotBehaviour* Behaviour) {
-	//No tiene nada
-//};
-
 void actionFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
-	//Según la programación original, se le asignaba =0
+	//Empty
 };
 
 void setupFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
-	//No tiene nada
+	//Empty
 };
 
 bool doneFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
@@ -24,11 +20,11 @@ bool failure_detectionFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameter
 };
 
 void failure_identificationFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
-	//No tiene nada
+	//Empty
 };
 
 void failure_recoveryFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
-	//No tiene nada
+	//Empty
 };
 
 void executeFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
@@ -46,7 +42,6 @@ void executeFunctionOSB(OneShotBehaviour* Behaviour, void* pvParameters) {
 
 
 void ConstructorOneShotBehaviour(OneShotBehaviour* Behaviour) {
-	//Behaviour->CreateOneShotBehaviour = &CreateOneShotBehaviourFunction;
 	Behaviour->action = &actionFunctionOSB;
 	Behaviour->setup = &setupFunctionOSB;
 	Behaviour->done = &doneFunctionOSB;

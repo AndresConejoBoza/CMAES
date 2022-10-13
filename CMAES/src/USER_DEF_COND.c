@@ -3,17 +3,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-bool register_condFunction(USER_DEF_COND* cond)
+bool register_condFunction()
 {
     return true;
 }
 
-bool kill_condFunction(USER_DEF_COND* cond)
+bool kill_condFunction()
 {
     return true;
 }
 
-bool deregister_condFunction(USER_DEF_COND* cond)
+bool deregister_condFunction()
 {
     return true;
 }
@@ -28,7 +28,7 @@ bool resume_condFunction()
     return true;
 }
 
-bool restart_condFunction(USER_DEF_COND* cond)
+bool restart_condFunction()
 {
     return true;
 }
