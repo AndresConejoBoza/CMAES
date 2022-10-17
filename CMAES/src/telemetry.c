@@ -1,7 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "FreeMAES.h"
+#include "CMAES.h"
 
 /* Demo includes. */
 #include "supporting_functions.h"
@@ -75,21 +75,21 @@ void genAction(CyclicBehaviour* Behaviour, void* pvParameters) {
 		min = 0.1; //mA
 		max = 1000; //mA
 		value = min + rand() / (RAND_MAX / (max - min + 1) + 1);
-		snprintf(response, 50, "\r\nCurrent mesasurment: %f\r\n", value);
+		snprintf(response, 50, "\r\nCurrent mesasurment: %f\r", value);
 		break;
 
 	case VOLTAGE:
 		min = 0.5; //V
 		max = 3.3; //V
 		value = min + rand() / (RAND_MAX / (max - min + 1) + 1);
-		snprintf(response, 50, "\r\nVoltage mesasurment: %f\r\n", value);
+		snprintf(response, 50, "\r\nVoltage mesasurment: %f\r", value);
 		break;
 
 	case TEMPERATURE:
 		min = 30; //C
 		max = 100; //C
 		value = min + rand() / (RAND_MAX / (max - min + 1) + 1);
-		snprintf(response, 50, "\r\nTemperature mesasurment: %f\r\n", value);
+		snprintf(response, 50, "\r\nTemperature mesasurment: %f\r", value);
 		break;
 
 	default:
@@ -111,7 +111,7 @@ void gen(void* pvParameters) {
 
 
 int telemetry() {
-	printf("MAES DEMO \n");
+	printf("------Telemetry------ \n");
 	log_current.rate = 500;
 	log_voltage.rate = 1000;
 	log_temperature.rate = 2000;
@@ -146,7 +146,8 @@ int telemetry() {
 	Platform.agent_initConParam(&Platform, &logger_temperature, &Temperaturelogger, (void*)&log_temperature);
 	Platform.agent_init(&Platform, &measurement, &gen);
 	Platform.boot(&Platform);
-	printf("Boot exitoso \n");
+	printf("CMAES booted successfully \n");
+	printf("Initiating APP\n\n");
 	/* Start the scheduler so the created tasks start executing. */
 	vTaskStartScheduler();
 

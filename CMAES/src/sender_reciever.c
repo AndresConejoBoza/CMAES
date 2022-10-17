@@ -1,7 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "FreeMAES.h"
+#include "CMAES.h"
 
 /* Demo includes. */
 #include "supporting_functions.h"
@@ -25,7 +25,7 @@ void writingsetup(CyclicBehaviour* Behaviour, void* pvParameters) {
 };
 
 void writingaction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	printf("Enviando mensaje... \n");
+	printf("***Sending Message***\n");
 	Behaviour->msg->send0(Behaviour->msg);
 	vTaskDelay(pdMS_TO_TICKS(1000));
 };
@@ -41,10 +41,9 @@ void write(void* pvParameters) {
 //Functions related to the reading Behaviour
 
 void readingaction(CyclicBehaviour* Behaviour, void* pvParameters) {
-	printf("Esperando... \n");
 	Behaviour->msg->Agent_Msg(Behaviour->msg);
 	Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
-	printf("Mensaje recibido: ¡Hola MAES! \n");
+	printf("***Message Received: Hello world***\n\n");
 };
 
 void read(void* pvParameters) {
@@ -56,7 +55,7 @@ void read(void* pvParameters) {
 
 //Main
 int sender_receiver() {
-
+	printf("------Sender Receiver APP------ \n");
 	//Constructors for each initialized class
 	ConstructorAgente(&sender);
 	ConstructorAgente(&receiver);
@@ -73,11 +72,11 @@ int sender_receiver() {
 	AP.Agent_Platform(&AP, "sender_receiver_platform");
 	
 	//Registering the Agents and their respective behaviour into the Platform
-	printf("MAES DEMO \n");
 	AP.agent_init(&AP,&sender, &write);
 	AP.agent_init(&AP,&receiver, &read);
 	AP.boot(&AP);
-	printf("Boot exitoso \n");
+	printf("CMAES booted successfully \n");
+	printf("Initiating APP\n\n");
 
 	// Start the scheduler so the created tasks start executing.
 	vTaskStartScheduler();

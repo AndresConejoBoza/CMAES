@@ -1,7 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "FreeMAES.h"
+#include "CMAES.h"
 
 
 /* Demo includes. */
@@ -44,12 +44,11 @@ void playSetup(CyclicBehaviour* Behaviour, void* pvParameters) {
 
 void playAction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	Agent_info informacion = Platform.get_Agent_description(Platform.get_running_agent(&Platform));
-	printf("Player: %s\n",informacion.agent_name);
+	printf(informacion.agent_name);
 	printf(": Rock, Paper, Scissors... \n");
 	Platform.agent_wait(&Platform, pdMS_TO_TICKS(10));
 	int num = getRandom();
 	char* bet= "";
-	printf("\nPlaying: %s\n", informacion.agent_name);
 	switch (num){
 	case 0:
 		bet = "ROCK";
@@ -106,7 +105,6 @@ void watchoverAction(OneShotBehaviour* Behaviour, void* pvParameters) {
 		{1, 0, 2},
 		{2, 1, 0}
 	};
-	printf("\nREFEREE READY \n");
 	while (true)
 	{
 		Behaviour->msg->receive(Behaviour->msg,portMAX_DELAY);
@@ -160,7 +158,7 @@ void watchoverAction(OneShotBehaviour* Behaviour, void* pvParameters) {
 	Platform.agent_wait(&Platform,pdMS_TO_TICKS(2000));
 	Behaviour->msg->resume(Behaviour->msg,AgentA.AID(&AgentA));
 	Behaviour->msg->resume(Behaviour->msg,AgentB.AID(&AgentB));
-	printf("-------------------PLAYING AGAIN---------------------\n");
+	printf("\n-------------PLAYING AGAIN---------------\n");
 };
 
 void watchover(void* pvParameters) {
@@ -174,7 +172,7 @@ void watchover(void* pvParameters) {
 
 
 int rock_paper_scissors() {
-
+	printf("------Rock Paper Scissors APP------ \n");
 	ConstructorAgente(&AgentA);
 	ConstructorAgente(&AgentB);
 	ConstructorAgente(&Referee);
@@ -190,12 +188,12 @@ int rock_paper_scissors() {
 	AgentB.Iniciador(&AgentB, "Player B", 1, 20);
 	Referee.Iniciador(&Referee, "Referee", 2, 20);
 	Platform.Agent_Platform(&Platform, "RPS_platform");
-	printf("MAES DEMO \n");
 	Platform.agent_init(&Platform,&AgentA, &playA);
 	Platform.agent_init(&Platform, &AgentB, &playB);
 	Platform.agent_init(&Platform, &Referee, &watchover);
 	Platform.boot(&Platform);
-	printf("Boot exitoso \n");
+	printf("CMAES booted successfully \n");
+	printf("Initiating APP\n\n");
 	/* Start the scheduler so the created tasks start executing. */
 	vTaskStartScheduler();
 
