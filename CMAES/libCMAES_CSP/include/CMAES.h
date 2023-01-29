@@ -1,9 +1,9 @@
 /***********************************************************
  *   MAES is a framework for Real Time Embedded Systems    *
  *   designed by C. Chan-Zheng at TU Delft.                *
- *   This is a library which implements the framework      *
- *   components to be compatible with FreeRTOS developed   *
- *   by D. Rojas Marin at ITCR.                            *
+ *   This is a an adaptation written in C of the library   *
+ *   FreeMAES which implements the MAES framework.         *
+ *   This library was developed by Andrés Conejo Boza      *
 ************************************************************/
 
 
@@ -14,25 +14,29 @@
 #include <string.h>
 #include <stdbool.h>
 
+//For CSP
 
+#include <csp/csp.h>
+#include <csp/arch/csp_thread.h>
+#include <csp/arch/csp_queue.h>
 
 
 
 #ifndef MAEStskKERNEL_VERSION_MAJOR
-#define MAESTaskHandle_t xTaskHandle
-#define MAESQueueHandle_t xQueueHandle
+#define MAESTaskHandle_t csp_thread_handle_t //CSP
+#define MAESQueueHandle_t csp_queue_handle_t //CSP
 #define MAESTickType_t portTickType
 #define MAESTaskFunction_t pdTASK_CODE
 #define MAESUBaseType_t unsigned portBASE_TYPE
 #define MAESBaseType_t portBASE_TYPE
 #endif
 
-#define Agent_AID MAESTaskHandle_t		        // Agent ID
-#define Mailbox_Handle MAESQueueHandle_t        // Agent's Mailbox Handle
-#define AGENT_LIST_SIZE 64					// Maximum Agents per platform
-#define MAX_RECEIVERS AGENT_LIST_SIZE - 1	// Maximum receivers available for any agent
-#define BEHAVIOUR_LIST_SIZE 8				//
-#define ORGANIZATIONS_SIZE 16				// Maximum Members for org
+#define Agent_AID MAESTaskHandle_t		             // Agent ID
+#define Mailbox_Handle MAESQueueHandle_t            // Agent's Mailbox Handle
+#define AGENT_LIST_SIZE 64					        // Maximum Agents per platform
+#define MAX_RECEIVERS AGENT_LIST_SIZE - 1        	// Maximum receivers available for any agent
+#define BEHAVIOUR_LIST_SIZE 8				        //
+#define ORGANIZATIONS_SIZE 16				         // Maximum Members for org
 
 
 
@@ -174,15 +178,21 @@
 	 *                       CLASSES                       *
 	 *******************************************************/
 
+	// Class: MAESAgent//
+
 	typedef struct MAESAgent MAESAgent;
-	struct MAESAgent 
-	{
+	struct MAESAgent {
+
+		//Attributes
 		Agent_info agent;
 		Agent_resources resources;
-		//void* (*IniciadorVacio)(MAESAgent*);
+
+		//Methods
 		void* (*Iniciador)(MAESAgent*,const char* ,MAESUBaseType_t ,uint16_t );
 		Agent_AID* (*AID)(MAESAgent *);
 	};
+
+	//Class: sysVars//
 
 	typedef struct {
 		Agent_AID first;
@@ -191,26 +201,33 @@
 
 	typedef struct sysVars sysVars;
 	struct sysVars {
+
+		//Attributes
+		sysVar environment[AGENT_LIST_SIZE];
+
+		//Methods
 		MAESAgent* (* get_taskEnv)(sysVars*,Agent_AID aid);
 		void* (*set_TaskEnv)(sysVars*, Agent_AID aid, MAESAgent* agent_ptr);
 		void* (* erase_TaskEnv)(sysVars*,Agent_AID aid);
 		sysVar* (*getEnv)(sysVars*);
-		sysVar environment[AGENT_LIST_SIZE];
 	};
 
+	extern sysVars env;
 
-//Clase Agent MSG//	
+//Class: Agent Message//	
 
 	typedef struct Agent_Msg Agent_Msg;
 	struct Agent_Msg {
+
+		//Attributes
 		MsgObj msg;
 		sysVars* ptr_env;
 		Agent_AID receivers[MAX_RECEIVERS];
 		UBaseType_t subscribers;
 		Agent_AID caller;
 
-		//Métodos
-		bool (* isRegistered)(Agent_Msg*,Agent_AID aid); //Este recibía un resultado booleano, revisar eso.// 
+		//Methods
+		bool (* isRegistered)(Agent_Msg*,Agent_AID aid); 
 		Mailbox_Handle* (* get_mailbox)(Agent_Msg*,Agent_AID aid);
 		void* (*Agent_Msg)(Agent_Msg*);
 		ERROR_CODE (*add_receiver)(Agent_Msg*,Agent_AID aid_receiver);
@@ -225,8 +242,8 @@
 		MsgObj* (*get_msg)(Agent_Msg*);
 		MSG_TYPE (*get_msg_type)(Agent_Msg*);
 		char* (*get_msg_content)(Agent_Msg*);
-		Agent_AID* (*get_sender)(Agent_Msg*);
-		Agent_AID* (*get_target_agent)(Agent_Msg*);
+		Agent_AID (*get_sender)(Agent_Msg*);
+		Agent_AID (*get_target_agent)(Agent_Msg*);
 		ERROR_CODE (*registration)(Agent_Msg*,Agent_AID target_agent);
 		ERROR_CODE (*deregistration)(Agent_Msg*,Agent_AID target_agent);
 		ERROR_CODE (*suspend)(Agent_Msg*,Agent_AID target_agent);
@@ -235,41 +252,51 @@
 		ERROR_CODE (*restart)(Agent_Msg*);
 	};
 
-	//CLASE USER_DEF_COND
-
+	//Class: User Defined Conditions//
 
 	typedef struct USER_DEF_COND USER_DEF_COND;
 	struct USER_DEF_COND {
-		bool (*register_cond)(USER_DEF_COND*);
-		bool (*deregister_cond)(USER_DEF_COND*);
-		bool (*suspend_cond)(USER_DEF_COND*);
-		bool (*kill_cond)(USER_DEF_COND*);
-		bool (*resume_cond)(USER_DEF_COND*);
-		bool (*restart_cond)(USER_DEF_COND*);
+
+		//Methods
+		bool (*register_cond)();
+		bool (*deregister_cond)();
+		bool (*suspend_cond)();
+		bool (*kill_cond)();
+		bool (*resume_cond)();
+		bool (*restart_cond)();
 	};
 
-// Clase Agent Platform//
+// Class: Agent Platform//
+
+	typedef struct AMSparameter AMSparameter;
 	typedef struct Agent_Platform Agent_Platform;
 	struct Agent_Platform {
-		sysVars* ptr_env; //Le agregué este puntero al env porque casi todas las funciones de Agent Platform lo necesitan, entonces en lugar de hacer un extern env, se lo envío en el constructor.
+
+		//Attributes
+		sysVars* ptr_env; 
 		MAESAgent agentAMS;
 		Agent_AID Agent_Handle[AGENT_LIST_SIZE];
 		AP_Description description;
 		USER_DEF_COND cond;
 		USER_DEF_COND* ptr_cond;
+		AMSparameter* parameter;
+
+		//Methods
 		void* (*Agent_Platform)(Agent_Platform* platform,const char* name);
-		void* (*Agent_PlatformWithCond)(Agent_Platform* platform, const char* name, USER_DEF_COND* user_cond);
+		void* (*Agent_PlatformWithCond)(Agent_Platform* platform, const char* name, 
+			USER_DEF_COND* user_cond);
 		bool (*boot)(Agent_Platform* platform);
-		void* (*agent_init)(Agent_Platform* platform, MAESAgent* agent, void behaviour(void* pvParameters));
-		void* (*agent_initConParam)(Agent_Platform* platform, MAESAgent* agent, void behaviour(void* pvParameters), void* pvParameters);
+		void* (*agent_init)(Agent_Platform* platform, MAESAgent* agent, void* behaviour);
+		void* (*agent_initConParam)(Agent_Platform* platform, MAESAgent* agent, 
+			void behaviour(void* pvParameters), void* pvParameters);
 		bool (*agent_search)(Agent_Platform* platform, Agent_AID aid);
 		void* (* agent_wait)(Agent_Platform* platform, MAESTickType_t ticks);
 		void* (*agent_yield)(Agent_Platform* platform);
-		Agent_AID* (*get_running_agent)(Agent_Platform* platform);
+		Agent_AID (*get_running_agent)(Agent_Platform* platform);
 		#ifdef tskKERNEL_VERSION_MAJOR
 		AGENT_MODE (*get_state)(Agent_Platform* platform, Agent_AID aid);
 		#endif
-		Agent_info* (*get_Agent_description)(Agent_Platform* platform, Agent_AID aid);
+		Agent_info (*get_Agent_description)(Agent_AID aid);
 		AP_Description* (*get_AP_description)(Agent_Platform* platform);
 		ERROR_CODE (*register_agent)(Agent_Platform* platform, Agent_AID aid);
 		ERROR_CODE (*deregister_agent)(Agent_Platform* platform, Agent_AID aid);
@@ -279,54 +306,67 @@
 		void* (*restart)(Agent_Platform* platform, Agent_AID aid);
 	};
 
+	extern Agent_Platform Platform;
 
-
-	//Clase AMS Task
-	typedef struct AMSparameter AMSparameter;
+	//Class: AMS Task
 	struct AMSparameter{
 		sysVars* ptr_env;
 		Agent_Platform* services;
 		USER_DEF_COND* cond;
-		//void* (* AMS_task)(AMSparameter* parameter,void* pvParameters,sysVars* env);
 	};
 
 	
 
 
-	//Clase CyclicBehaviour
+	//Class: CyclicBehaviour//
+
 	typedef struct CyclicBehaviour CyclicBehaviour;
 	struct CyclicBehaviour {
+
+		//Attributes
 		void* taskParameters;
-		Agent_Msg msg;
-		//void* (* CreateCyclicBehaviour)(CyclicBehaviour* Behaviour);
-		void* (* action)(CyclicBehaviour* Behaviour);
-		void* (*setup)(CyclicBehaviour* Behaviour);
-		bool (*done)(CyclicBehaviour* Behaviour);
-		bool (*failure_detection)(CyclicBehaviour* Behaviour);
-		void* (*failure_identification)(CyclicBehaviour* Behaviour);
-		void* (*failure_recovery)(CyclicBehaviour* Behaviour);
-		void* (*execute)(CyclicBehaviour* Behaviour);
-	};
-	//Clase OneShotBehaviour
-	typedef struct OneShotBehaviour OneShotBehaviour;
-	struct OneShotBehaviour {
-		void* taskParameters;
-		Agent_Msg msg;
-		//void* (*CreateOneShotBehaviour)(OneShotBehaviour* Behaviour);
-		void* (*action)(OneShotBehaviour* Behaviour);
-		void* (*setup)(OneShotBehaviour* Behaviour);
-		bool (*done)(OneShotBehaviour* Behaviour);
-		bool (*failure_detection)(OneShotBehaviour* Behaviour);
-		void* (*failure_identification)(OneShotBehaviour* Behaviour);
-		void* (*failure_recovery)(OneShotBehaviour* Behaviour);
-		void* (*execute)(OneShotBehaviour* Behaviour);
+		Agent_Msg* msg;
+
+		//Methods
+		void* (* action)(CyclicBehaviour* Behaviour, void* pvParameters);
+		void* (*setup)(CyclicBehaviour* Behaviour, void* pvParameters);
+		bool (*done)(CyclicBehaviour* Behaviour, void* pvParameters);
+		bool (*failure_detection)(CyclicBehaviour* Behaviour, void* pvParameters);
+		void* (*failure_identification)(CyclicBehaviour* Behaviour, void* pvParameters);
+		void* (*failure_recovery)(CyclicBehaviour* Behaviour, void* pvParameters);
+		void* (*execute)(CyclicBehaviour* Behaviour, void* pvParameters);
 	};
 
+
+	//Class: OneShotBehaviour//
+
+	typedef struct OneShotBehaviour OneShotBehaviour;
+	struct OneShotBehaviour {
+
+		//Attributes
+		void* taskParameters;
+		Agent_Msg* msg;
+
+		//Methods
+		void* (*action)(OneShotBehaviour* Behaviour, void* pvParameters);
+		void* (*setup)(OneShotBehaviour* Behaviour, void* pvParameters);
+		bool (*done)(OneShotBehaviour* Behaviour, void* pvParameters);
+		bool (*failure_detection)(OneShotBehaviour* Behaviour, void* pvParameters);
+		void* (*failure_identification)(OneShotBehaviour* Behaviour, void* pvParameters);
+		void* (*failure_recovery)(OneShotBehaviour* Behaviour, void* pvParameters);
+		void* (*execute)(OneShotBehaviour* Behaviour, void* pvParameters);
+	};
+
+	//Class: Agent Organization//
 
 	typedef struct Agent_Organization Agent_Organization;
 	struct Agent_Organization {
+
+		//Attributes
 		sysVars* ptr_env;
 		org_info description;
+
+		//Methods
 		void* (*Agent_Organization)(Agent_Organization* Organization,ORG_TYPE organization_type);
 		ERROR_CODE (*create)(Agent_Organization* Organization);
 		ERROR_CODE (*destroy)(Agent_Organization* Organization);
@@ -345,15 +385,21 @@
 		ORG_TYPE (*get_org_type)(Agent_Organization* Organization);
 		org_info (*get_info)(Agent_Organization* Organization);
 		MAESUBaseType_t (*get_size)(Agent_Organization* Organization);
-		MSG_TYPE (*invite)(Agent_Organization* Organization, Agent_Msg msg, UBaseType_t password, Agent_AID target_agent, UBaseType_t timeout);
+		MSG_TYPE (*invite)(Agent_Organization* Organization, Agent_Msg msg, 
+			UBaseType_t password, Agent_AID target_agent, UBaseType_t timeout);
 	};
 
 
+
+	//Extern definitions for Sender Receiver
+	extern CyclicBehaviour writingBehaviour, readingBehaviour;
+	extern Agent_Msg msg_writing, msg_reading;
+
+	//Defining constructors for each class
 	void ConstructorAgente(MAESAgent* agente);
-	void InicializadorSysVars(sysVars* Vars);
-	void InicializadorAgent_Msg(Agent_Msg* Message, sysVars* env);
+	void ConstructorSysVars(sysVars* Vars);
+	void ConstructorAgent_Msg(Agent_Msg* Message, sysVars* env);
 	void ConstructorAgent_Platform(Agent_Platform* platform, sysVars* env);
-	void ConstructorAMS(AMSparameter* parameter);
 	void ConstructorCyclicBehaviour(CyclicBehaviour* Behaviour);
 	void ConstructorOneShotBehaviour(OneShotBehaviour* Behaviour);
 	void ConstructorAgent_Organization(Agent_Organization* Organization, sysVars* env);

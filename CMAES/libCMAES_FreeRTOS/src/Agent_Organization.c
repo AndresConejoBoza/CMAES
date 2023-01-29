@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
+//Agent Organization Function: This function sets some of the initial values of the parameters needed in the agent organization. 
+//Inputs: The organization instance itself and the organization type.
+//Outputs: None.
 void Agent_OrganizationFunction(Agent_Organization* Organization, ORG_TYPE organization_type) {
 	Organization->description.org_type = organization_type;
 	Organization->description.members_num = 0;
@@ -15,6 +19,9 @@ void Agent_OrganizationFunction(Agent_Organization* Organization, ORG_TYPE organ
 	}
 };
 
+//Create Function: This function creates an organization with some initial parameters. 
+//Inputs: The organization instance itself.
+//Outputs: An error code indicating if creating the organization was successful.
 ERROR_CODE createFunction(Agent_Organization* Organization) {
 	if (xTaskGetCurrentTaskHandle() == NULL)
 	{
@@ -45,6 +52,9 @@ ERROR_CODE createFunction(Agent_Organization* Organization) {
 	}
 };
 
+//Destroy Function: This function destroys an organization. 
+//Inputs: The organization instance itself.
+//Outputs: An error code indicating if destroying the organization was successful.
 ERROR_CODE destroyFunction(Agent_Organization* Organization) {
 	if (Organization->description.owner == xTaskGetCurrentTaskHandle())
 	{
@@ -70,6 +80,9 @@ ERROR_CODE destroyFunction(Agent_Organization* Organization) {
 	}
 };
 
+//Is Member Function: This function searches for an agent in the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent was found in the organization.
 ERROR_CODE isMemberFunction(Agent_Organization* Organization, Agent_AID aid) {
 	for (MAESUBaseType_t i = 0; i < Organization->description.members_num; i++)
 	{
@@ -81,6 +94,9 @@ ERROR_CODE isMemberFunction(Agent_Organization* Organization, Agent_AID aid) {
 	return NOT_FOUND;
 };
 
+//Is Banned Function: This function searches for an agent in the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent was banned from the organization.
 ERROR_CODE isBannedFunction(Agent_Organization* Organization, Agent_AID aid) {
 	for (MAESUBaseType_t i = 0; i < Organization->description.banned_num; i++)
 	{
@@ -92,6 +108,9 @@ ERROR_CODE isBannedFunction(Agent_Organization* Organization, Agent_AID aid) {
 	return NOT_FOUND;
 };
 
+//Change Owner Function: This function changes the organization's owner. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the organization's owner has been changed.
 ERROR_CODE change_ownerFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if (Organization->description.owner == xTaskGetCurrentTaskHandle() && Organization->isMember(Organization,aid) == FOUND)
 	{
@@ -110,6 +129,9 @@ ERROR_CODE change_ownerFunction(Agent_Organization* Organization, Agent_AID aid)
 	}
 };
 
+//Set Admin Function: This function sets the organization's administrator. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent AID has been set as the organization's administrator.
 ERROR_CODE set_adminFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if (Organization->description.owner == xTaskGetCurrentTaskHandle() && Organization->isMember(Organization,aid) == FOUND)
 	{
@@ -126,6 +148,9 @@ ERROR_CODE set_adminFunction(Agent_Organization* Organization, Agent_AID aid) {
 	}
 };
 
+//Set Moderator Function: This function sets the organization's moderator. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent AID has been set as the organization's moderator.
 ERROR_CODE set_moderatorFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if (Organization->description.owner == xTaskGetCurrentTaskHandle() && Organization->isMember(Organization,aid) == FOUND)
 	{
@@ -140,6 +165,9 @@ ERROR_CODE set_moderatorFunction(Agent_Organization* Organization, Agent_AID aid
 	}
 };
 
+//Add Agent Function: This function adds an agent into the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent was added successfully into the organization.
 ERROR_CODE add_agentFunction(Agent_Organization* Organization, Agent_AID aid) {
 	MAESAgent* agent = (MAESAgent*)Organization->ptr_env->get_taskEnv(Organization->ptr_env, aid);
 
@@ -168,6 +196,9 @@ ERROR_CODE add_agentFunction(Agent_Organization* Organization, Agent_AID aid) {
 	}
 };
 
+//Kick Agent Function: This function kicks an agent from the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent was successfully kicked from the organization.
 ERROR_CODE kick_agentFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if (aid == xTaskGetCurrentTaskHandle())
 		return INVALID;
@@ -210,6 +241,9 @@ ERROR_CODE kick_agentFunction(Agent_Organization* Organization, Agent_AID aid) {
 	}
 };
 
+//Ban Agent Function: This function banns an agent from the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent was successfully banned from the organization.
 ERROR_CODE ban_agentFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if (Organization->description.banned_num == AGENT_LIST_SIZE)
 	{
@@ -236,6 +270,9 @@ ERROR_CODE ban_agentFunction(Agent_Organization* Organization, Agent_AID aid) {
 	}
 };
 
+//Remove Ban Function: This function removes the ban status of an agent in the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent was successfully unbanned from the organization.
 ERROR_CODE remove_banFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if (Organization->description.owner == xTaskGetCurrentTaskHandle() || Organization->description.admin == xTaskGetCurrentTaskHandle())
 	{
@@ -272,6 +309,9 @@ ERROR_CODE remove_banFunction(Agent_Organization* Organization, Agent_AID aid) {
 	}
 };
 
+//Clear Ban List Function: This function clears the list of banned agents in the organization. 
+//Inputs: The organization instance itself.
+//Outputs: None.
 void clear_ban_listFunction(Agent_Organization* Organization) {
 	if (Organization->description.owner == xTaskGetCurrentTaskHandle() || Organization->description.admin == xTaskGetCurrentTaskHandle())
 	{
@@ -282,6 +322,9 @@ void clear_ban_listFunction(Agent_Organization* Organization) {
 	}
 };
 
+//Set Participant Function: This function sets the participant role to an agent in the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent's participant role was set successfully.
 ERROR_CODE set_participanFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if ((Organization->description.owner == xTaskGetCurrentTaskHandle() || Organization->description.moderator == xTaskGetCurrentTaskHandle()) && Organization->isMember(Organization,aid) == FOUND)
 	{
@@ -295,6 +338,9 @@ ERROR_CODE set_participanFunction(Agent_Organization* Organization, Agent_AID ai
 	}
 };
 
+//Set Visitor Function: This function sets the visitor role to an agent in the organization. 
+//Inputs: The organization instance itself and the agent AID.
+//Outputs: An error code indicating if the agent's visitor role was set successfully.
 ERROR_CODE set_visitorFunction(Agent_Organization* Organization, Agent_AID aid) {
 	if ((Organization->description.owner == xTaskGetCurrentTaskHandle() || Organization->description.moderator == xTaskGetCurrentTaskHandle()) && Organization->isMember(Organization,aid) == FOUND)
 	{
@@ -308,18 +354,30 @@ ERROR_CODE set_visitorFunction(Agent_Organization* Organization, Agent_AID aid) 
 	}
 };
 
+//Get Organization Type Function: This function returns the organization's type. 
+//Inputs: The organization instance itself.
+//Outputs: The organization's type itself.
 ORG_TYPE get_org_typeFunction(Agent_Organization* Organization) {
 	return Organization->description.org_type;
 };
 
+//Get Information Function: This function returns the organization's information stored in its description. 
+//Inputs: The organization instance itself.
+//Outputs: The organization's description.
 org_info get_infoFunction(Agent_Organization* Organization) {
 	return Organization->description;
 };
 
+//Get Size Function: This function returns the organization's size. 
+//Inputs: The organization instance itself.
+//Outputs: The amount of agents that can be registered in the organization.
 MAESUBaseType_t get_sizeFunction(Agent_Organization* Organization) {
 	return Organization->description.members_num;
 };
 
+//Invite Function: This function invites an agent into the organization and, if he accepts, the agent is added into the organization. 
+//Inputs: The organization instance itself, the message used to invite the agent, the organization's password, the target agent and the timeout.
+//Outputs: The message type, indicating if the agent accepted or denied the invitation.
 MSG_TYPE inviteFunction(Agent_Organization* Organization, Agent_Msg msg, UBaseType_t password, Agent_AID target_agent, UBaseType_t timeout) {
 	MAESAgent* caller = (MAESAgent*)Organization->ptr_env->get_taskEnv(Organization->ptr_env, xTaskGetCurrentTaskHandle());
 
@@ -345,7 +403,9 @@ MSG_TYPE inviteFunction(Agent_Organization* Organization, Agent_Msg msg, UBaseTy
 };
 
 
-
+//Agent Organization Constructor: This function assigns the class pointers to its corresponding function.
+//Inputs: Ponter to the Agent Organization class.
+//Outputs: None.
 void ConstructorAgent_Organization(Agent_Organization* Organization, sysVars* env) {
 	Organization->ptr_env=env;
 	Organization->Agent_Organization = &Agent_OrganizationFunction;

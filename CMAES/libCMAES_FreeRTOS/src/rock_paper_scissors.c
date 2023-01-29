@@ -4,8 +4,7 @@
 #include "CMAES.h"
 
 
-/* Demo includes. */
-#include "supporting_functions.h"
+//Defining the app's variables.
 
 MAESAgent AgentA, AgentB, Referee;
 Agent_Platform Platform; 
@@ -16,12 +15,16 @@ Agent_Msg msg_playA,msg_playB, msg_watchover;
 int bet;
 
 
-//Funcion aleatoria
+//Random Number Generator Function: This function generates a random number between 0 and 2.
+//Inputs: None.
+//Outputs: Random number between 0 and 2.
 int getRandom() {
 	return rand()%2;
 };
 
-//Funcion msg a int
+//Msg to int Function: This function translates a specific msg to a certain numeric value.
+//Inputs: A message that represents the player's choice.
+//Outputs: A number that represents the player's choice.
 int choices(char* msg) {
 	if (msg == "ROCK")
 	{
@@ -37,6 +40,8 @@ int choices(char* msg) {
 	}
 };
 
+//Functions related to the play Behaviour
+
 void playSetup(CyclicBehaviour* Behaviour, void* pvParameters) {
 	Behaviour->msg->Agent_Msg(Behaviour->msg);
 	Behaviour->msg->add_receiver(Behaviour->msg, Referee.AID(&Referee));
@@ -46,7 +51,7 @@ void playAction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	Agent_info informacion = Platform.get_Agent_description(Platform.get_running_agent(&Platform));
 	printf(informacion.agent_name);
 	printf(": Rock, Paper, Scissors... \n");
-	Platform.agent_wait(&Platform, pdMS_TO_TICKS(10));
+	Platform.agent_wait(&Platform, 10);
 	int num = getRandom();
 	char* bet= "";
 	switch (num){
@@ -70,6 +75,10 @@ void playAction(CyclicBehaviour* Behaviour, void* pvParameters) {
 	Behaviour->msg->send0(Behaviour->msg);
 };
 
+//Wrappers: Since two different agents are going to use the play Behaviour, a wrapper function must be created for each one of the agents. Doing this, two different instances of the play Behaviour will be created and
+//          there will not be an error regarding overwriting values from the other agent. 
+
+//PlayA Wrapper: 
 void playA(void* pvParameters) {;
 	playBehaviourA.msg = &msg_playA;
 	playBehaviourA.setup = &playSetup;
@@ -79,6 +88,7 @@ void playA(void* pvParameters) {;
 	}
 };
 
+//PlayB Wrapper:
 void playB(void* pvParameters) {
 	playBehaviourB.msg = &msg_playB;
 	playBehaviourB.setup = &playSetup;
@@ -88,6 +98,7 @@ void playB(void* pvParameters) {
 	}
 };
 
+//Functions related to the Watchover Behaviour
 
 void watchoverSetup(OneShotBehaviour* Behaviour, void* pvParameters) {
 	Behaviour->msg->Agent_Msg(Behaviour->msg);
@@ -155,12 +166,13 @@ void watchoverAction(OneShotBehaviour* Behaviour, void* pvParameters) {
 	default:
 		break;
 	}
-	Platform.agent_wait(&Platform,pdMS_TO_TICKS(2000));
+	Platform.agent_wait(&Platform,2000);
 	Behaviour->msg->resume(Behaviour->msg,AgentA.AID(&AgentA));
 	Behaviour->msg->resume(Behaviour->msg,AgentB.AID(&AgentB));
 	printf("\n-------------PLAYING AGAIN---------------\n");
 };
 
+//Watchover Wrapper:
 void watchover(void* pvParameters) {
 	watchoverBehaviour.msg = &msg_watchover;
 	watchoverBehaviour.setup = &watchoverSetup;
@@ -170,9 +182,11 @@ void watchover(void* pvParameters) {
 	}
 };
 
-
+//Main
 int rock_paper_scissors() {
 	printf("------Rock Paper Scissors APP------ \n");
+
+	//Constructors for each initialized class
 	ConstructorAgente(&AgentA);
 	ConstructorAgente(&AgentB);
 	ConstructorAgente(&Referee);
@@ -184,18 +198,23 @@ int rock_paper_scissors() {
 	ConstructorCyclicBehaviour(&playBehaviourA);
 	ConstructorCyclicBehaviour(&playBehaviourB);
 	ConstructorOneShotBehaviour(&watchoverBehaviour);
+
+	//Initializing the Agents and the Platform.
 	AgentA.Iniciador(&AgentA, "Player A", 1, 20);
 	AgentB.Iniciador(&AgentB, "Player B", 1, 20);
 	Referee.Iniciador(&Referee, "Referee", 2, 20);
 	Platform.Agent_Platform(&Platform, "RPS_platform");
+
+	//Registering the Agents and their respective behaviour into the Platform
 	Platform.agent_init(&Platform,&AgentA, &playA);
 	Platform.agent_init(&Platform, &AgentB, &playB);
 	Platform.agent_init(&Platform, &Referee, &watchover);
 	Platform.boot(&Platform);
 	printf("CMAES booted successfully \n");
 	printf("Initiating APP\n\n");
-	/* Start the scheduler so the created tasks start executing. */
-	vTaskStartScheduler();
+
+	// Start the scheduler so the created tasks start executing.
+	vTaskStartScheduler(); //Might have to be changed because CSP Library takes control of the FreeRTOS scheduler
 
 	for (;;);
 

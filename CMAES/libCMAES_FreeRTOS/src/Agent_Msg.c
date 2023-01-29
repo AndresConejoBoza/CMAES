@@ -8,27 +8,15 @@
 //Inputs: The Message instance itself and the AID.
 //Outputs: True or False, depending on wether the agent was found or not.
 bool isRegisteredFunction(Agent_Msg* Message, Agent_AID aid) { //Este recibía un resultado booleano, revisar eso.// No deja return true, hay que cambiar la lógica a 1 y Function.
-
-
-
-	//MAESAgent* description_receiver = calloc(1, sizeof(MAESAgent));
-	//MAESAgent* description_sender = calloc(1, sizeof(MAESAgent));
-	//Inicializador(description_receiver);
-	//Inicializador(description_sender);
 	MAESAgent* description_receiver = (MAESAgent*)env.get_taskEnv(&env,aid);
 	MAESAgent* description_sender = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
-
-
-	//Agent* description_receiver = (Agent*)ptr_env->get_TaskEnv(aid); No estoy seguro de si transcribí bien estas. Se transcribió a lineas 12-17
-//	Agent* description_sender = (Agent*)ptr_env->get_TaskEnv(caller);
-
 	if (description_receiver->agent.AP == description_sender->agent.AP)
 	{
-		return TRUE;
+		return 1;
 	}
 	else
 	{
-		return FALSE;
+		return 0;
 	}
 };
 
@@ -53,6 +41,10 @@ void Agent_MsgFunction(Agent_Msg* Message) {
 	Message->clear_all_receiver(Message);
 };
 
+
+//Add Receiver Function: This function adds the AID of the agent that will receive a message into the list of the message receivers.
+//Inputs:The message instance itself and the AID of the Agent that will receive the messages.
+//Outputs: An struct Error Code that indicates if there was an error during the process of adding a new message receiver.
 ERROR_CODE add_receiverFunction(Agent_Msg* Message, Agent_AID aid_receiver) {
 	if (Message->isRegistered(Message,aid_receiver))
 	{
@@ -77,7 +69,9 @@ ERROR_CODE add_receiverFunction(Agent_Msg* Message, Agent_AID aid_receiver) {
 	}
 };
 
-
+//Remove Receiver Function: This function removes the AID of the agent that will receive a message from the list of the message receivers.
+//Inputs:The message instance itself and the AID of the Agent that will receive the messages.
+//Outputs: An struct Error Code that indicates if there was an error during the process of adding a new message receiver.
 ERROR_CODE remove_receiverFunction(Agent_Msg* Message, Agent_AID aid) {
 	MAESUBaseType_t i = 0;
 	while (i < MAX_RECEIVERS)
@@ -105,6 +99,9 @@ ERROR_CODE remove_receiverFunction(Agent_Msg* Message, Agent_AID aid) {
 	}
 };
 
+//Clear All Receivers Function: This function removes the AID of all the agents that are listed in the agent receiver list.
+//Inputs:The message instance itself.
+//Outputs: None.
 void clear_all_receiverFunction(Agent_Msg* Message) {
 	MAESUBaseType_t i = 0;
 	while (i < MAX_RECEIVERS)
@@ -114,6 +111,9 @@ void clear_all_receiverFunction(Agent_Msg* Message) {
 	}
 };
 
+//Refresh List Function: This function removes the AID of all the agents that are listed in the agent receiver list.
+//Inputs:The message instance itself.
+//Outputs: None.
 void refresh_listFunction(Agent_Msg* Message) {
 	MAESAgent* agent_caller, *agent_receiver;
 	agent_caller = (MAESAgent*)env.get_taskEnv(&env,Message->caller);
@@ -127,8 +127,11 @@ void refresh_listFunction(Agent_Msg* Message) {
 	}
 };
 
+//Receive Function: This function uses the library CSP to receive a message from another agent.
+//Inputs:The message instance itself and a timeout.
+//Outputs: The message received or a no response error.
 MSG_TYPE receiveFunction(Agent_Msg* Message, MAESTickType_t timeout) {
-	if (xQueueReceive(Message->get_mailbox(&Message, Message->caller), &Message->msg, timeout) != pdPASS)
+	if (xQueueReceive(Message->get_mailbox(Message, Message->caller), &Message->msg, timeout) != pdPASS)
 	{
 		return NO_RESPONSE;
 	}
@@ -138,6 +141,9 @@ MSG_TYPE receiveFunction(Agent_Msg* Message, MAESTickType_t timeout) {
 	}
 };
 
+//Send Function: This function uses the library CSP to send a message to another agent.
+//Inputs:The message instance itself, the receiving agent and a timeout.
+//Outputs: An Error code indicating if the message was sent successfuly.
 ERROR_CODE send1Function(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t timeout) {
 	Message->msg.target_agent = aid_receiver; 
 	Message->msg.sender_agent = Message->caller;
@@ -152,7 +158,7 @@ ERROR_CODE send1Function(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t 
 	{
 		if (agent_caller->agent.org == NULL && agent_receiver->agent.org == NULL)
 		{
-			if (xQueueSend(Message->get_mailbox(&Message,aid_receiver), &Message->msg, timeout) != pdPASS) 
+			if (xQueueSend(Message->get_mailbox(Message,aid_receiver), &Message->msg, timeout) != pdPASS) 
 			{
 				return TIMEOUT;
 			}
@@ -165,7 +171,7 @@ ERROR_CODE send1Function(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t 
 		{
 			if (((agent_caller->agent.org->org_type == TEAM) && (agent_caller->agent.role == PARTICIPANT)) || ((agent_caller->agent.org->org_type == HIERARCHY) && (agent_receiver->agent.role == MODERATOR)))
 			{
-				if (xQueueSend(Message->get_mailbox(&Message,aid_receiver), &Message->msg, timeout) != pdPASS)
+				if (xQueueSend(Message->get_mailbox(Message,aid_receiver), &Message->msg, timeout) != pdPASS)
 				{
 					return TIMEOUT;
 				}
@@ -196,6 +202,10 @@ ERROR_CODE send1Function(Agent_Msg* Message, Agent_AID aid_receiver, TickType_t 
 		}
 	}
 };
+
+//Send to All Receivers Function: This function uses the Send function to deliver messages to all of the receivers listed in the message receivers list. 
+//Inputs:The message instance itself.
+//Outputs: An Error code indicating if the message was sent successfuly to each receiver.
 ERROR_CODE send0Function(Agent_Msg* Message) {
 	MAESUBaseType_t i = 0;
 	ERROR_CODE error_code;
@@ -213,35 +223,59 @@ ERROR_CODE send0Function(Agent_Msg* Message) {
 	return error;
 };
 
+//Set Msg Type Function: This function sets the message type. 
+//Inputs:The message instance itself.
+//Outputs: None.
 void set_msg_typeFunction(Agent_Msg* Message, MSG_TYPE type) {
 	Message->msg.type = type;
 };
 
+//Set Msg Content Function: This function sets the message content. 
+//Inputs:The message instance itself.
+//Outputs: None.
 void set_msg_contentFunction(Agent_Msg* Message, char* msg_content) {
 	Message->msg.content = msg_content;
 };
 
+//Get Msg Function: This function gets the message. 
+//Inputs:The message instance itself.
+//Outputs: A pointer to the message.
 MsgObj* get_msgFunction(Agent_Msg* Message) {
 	MsgObj* ptr = &Message->msg;
 	return ptr;
 };
 
+//Get Msg Type Function: This function gets the message type. 
+//Inputs:The message instance itself.
+//Outputs: The message type.
 MSG_TYPE get_msg_typeFunction(Agent_Msg* Message) {
 	return Message->msg.type;
 }
 
+//Get Msg Content Function: This function gets the message content. 
+//Inputs:The message instance itself.
+//Outputs: The message content.
 char* get_msg_contentFunction(Agent_Msg* Message) {
 	return Message->msg.content;
 };
 
+//Get Sender Function: This function gets the message sender. 
+//Inputs:The message instance itself.
+//Outputs: The agent that sent the message.
 Agent_AID get_senderFunction(Agent_Msg* Message) {
 	return Message->msg.sender_agent;
 };
 
+//Get Target Agent Function: This function gets the agent that is going to receive the message. 
+//Inputs:The message instance itself.
+//Outputs: The message target.
 Agent_AID get_target_agentFunction(Agent_Msg* Message) {
 	return Message->msg.target_agent;
 };
 
+//Registration Function: This function sends a request to the AMS in order to register an agent in the platform. 
+//Inputs:The message instance itself and the AID of the agent that will be registered.
+//Outputs: An error code indicating if the registration was successful.
 ERROR_CODE registrationFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
@@ -283,6 +317,9 @@ ERROR_CODE registrationFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	}
 };
 
+//Deregistration Function: This function sends a request to the AMS in order to deregister an agent in the platform. 
+//Inputs:The message instance itself and the AID of the agent that will be deregistered.
+//Outputs: An error code indicating if the registration was successful.
 ERROR_CODE deregistrationFunction(Agent_Msg* Message, Agent_AID target_agent){
 
 	Agent_AID AMS;
@@ -305,7 +342,7 @@ ERROR_CODE deregistrationFunction(Agent_Msg* Message, Agent_AID target_agent){
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -325,6 +362,9 @@ ERROR_CODE deregistrationFunction(Agent_Msg* Message, Agent_AID target_agent){
 	}
 };
 
+//Suspend Function: This function sends a request to the AMS in order to suspend an agent in the platform. 
+//Inputs:The message instance itself and the AID of the agent that will be suspended.
+//Outputs: An error code indicating if the suspension was successful.
 ERROR_CODE suspendFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
@@ -347,7 +387,7 @@ ERROR_CODE suspendFunction(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -366,6 +406,10 @@ ERROR_CODE suspendFunction(Agent_Msg* Message, Agent_AID target_agent) {
 		return INVALID;
 	}
 };
+
+//Resume Function: This function sends a request to the AMS in order to resume an agent in the platform. 
+//Inputs:The message instance itself and the AID of the agent that will be resumed.
+//Outputs: An error code indicating if the agent was resumed.
 ERROR_CODE resumeFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
@@ -387,7 +431,7 @@ ERROR_CODE resumeFunction(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -407,6 +451,9 @@ ERROR_CODE resumeFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	}
 };
 
+//Kill Function: This function sends a request to the AMS in order to kill an agent in the platform. 
+//Inputs:The message instance itself and the AID of the agent that will be resumed.
+//Outputs: An error code indicating if the agent was resumed.
 ERROR_CODE killFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
@@ -428,7 +475,7 @@ ERROR_CODE killFunction(Agent_Msg* Message, Agent_AID target_agent) {
 			//Get the AMS info
 			AMS = agent_caller->agent.AP;
 			//Sending request
-			if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+			if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 			{
 				return INVALID;
 			}
@@ -448,6 +495,9 @@ ERROR_CODE killFunction(Agent_Msg* Message, Agent_AID target_agent) {
 	}
 };
 
+//Restart Function: This function sends a request to the AMS in order to restart an agent in the platform. 
+//Inputs:The message instance itself and the AID of the agent that will be restarted.
+//Outputs: An error code indicating if the agent was restarted.
 ERROR_CODE restartMsgFunction(Agent_Msg* Message) {
 	Agent_AID AMS;
 	MAESAgent* agent_caller;
@@ -457,7 +507,7 @@ ERROR_CODE restartMsgFunction(Agent_Msg* Message) {
 	Message->msg.target_agent = xTaskGetCurrentTaskHandle();
 	Message->msg.sender_agent = xTaskGetCurrentTaskHandle();
 	AMS = agent_caller->agent.AP;
-	if (xQueueSend(Message->get_mailbox(&Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
+	if (xQueueSend(Message->get_mailbox(Message,AMS), &Message->msg, portMAX_DELAY) != pdPASS)
 	{
 		return INVALID;
 	}
@@ -467,6 +517,9 @@ ERROR_CODE restartMsgFunction(Agent_Msg* Message) {
 	}
 };
 
+//Agent Message Constructor: This function assigns the class pointers to its corresponding function.
+//Inputs: Ponter to the Agent Message class.
+//Outputs: None.
 void ConstructorAgent_Msg(Agent_Msg* Message,sysVars* env) {
 	Message->subscribers = 0;
 	Message->ptr_env = env;

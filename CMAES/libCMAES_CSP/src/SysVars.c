@@ -70,7 +70,7 @@ sysVar* getEnvFunction(sysVars* Vars) {
 };
 
 //SysVars Constructor: This function assigns the class pointers to its corresponding function.
-//Inputs: Ponter to the SysVars class.
+//Inputs: Pointer to the SysVars class.
 //Outputs: None.
 void ConstructorSysVars(sysVars* Vars) {
 	Vars->get_taskEnv = &get_taskEnvFunction;

@@ -26,7 +26,7 @@ void MAESAgent1(MAESAgent* MAESagent, const char* name, MAESUBaseType_t pri, uin
 };
 
 //Agent Constructor: This function assigns the class pointers to its corresponding function.
-//Inputs: Ponter to the Agent.
+//Inputs: Pointer to the Agent.
 //Outputs: None.
 void ConstructorAgente(MAESAgent* agente) {
 	agente->Iniciador = &MAESAgent1;

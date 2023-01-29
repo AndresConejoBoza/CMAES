@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+//AMS Task Function: This function initiates the AMS Task, which manages the states of the agents. 
+//Inputs: Parameters passed into the AMS Task Function.
+//Outputs: None.
 void AMS_taskFunction(void* pvParameters) {
 	AMSparameter* amsParameters = (AMSparameter*)pvParameters;
 	USER_DEF_COND* cond = amsParameters->cond;
@@ -148,6 +151,9 @@ void AMS_taskFunction(void* pvParameters) {
 	} // end while
 };
 
+//Agent Platform Function: This function sets some of the initial values of the parameters needed in the agent platform. 
+//Inputs: The Platform instance itself and the platform given name.
+//Outputs: None.
 void Agent_PlatformFunction(Agent_Platform* platform, const char* name) {
 	static AMSparameter parameters;
 	platform->parameter = &parameters;
@@ -163,6 +169,9 @@ void Agent_PlatformFunction(Agent_Platform* platform, const char* name) {
 	}
 };
 
+//Agent Platform with Conditions Function: This function sets some of the initial values of the parameters needed in the agent platform. In this functin, some conditions are established by the user. 
+//Inputs: The Platform instance itself, the platform given name and the conditions given by the user.
+//Outputs: None.
 void Agent_PlatformWithCondFunction(Agent_Platform* platform, const char* name, USER_DEF_COND* user_cond) {
 	platform->agentAMS.agent.agent_name = name;
 	platform->ptr_cond = user_cond;
@@ -173,9 +182,9 @@ void Agent_PlatformWithCondFunction(Agent_Platform* platform, const char* name, 
 	}
 };
 
-
-
-
+//Boot Function: This function boots the agent platform. Therefore, it register each agent into the platform itself. 
+//Inputs: The Platform instance itself.
+//Outputs: bool variable indicating if the boot was successful.
 bool bootFunction(Agent_Platform* platform) {
 	if (xTaskGetCurrentTaskHandle() == NULL)
 	{
@@ -218,6 +227,9 @@ bool bootFunction(Agent_Platform* platform) {
 	}
 };
 
+//Agent Initiate Function: This function uses de CSP Library to create a thread for an agent. 
+//Inputs: The Platform instance itself, the agent and the agent's behavior.
+//Outputs: None.
 void agent_initFunction(Agent_Platform* platform, MAESAgent* agent, void* behaviour) {
 	if (xTaskGetCurrentTaskHandle() == 0)
 	{
@@ -232,6 +244,9 @@ void agent_initFunction(Agent_Platform* platform, MAESAgent* agent, void* behavi
 	}
 };
 
+//Agent Initiate with Parameters Function: This function uses de CSP Library to create a thread for an agent. Also, it includes input parameters 
+//Inputs: The Platform instance itself, the agent, the agent's behavior and its input parameters.
+//Outputs: None.
 void agent_initConParamFunction(Agent_Platform* platform, MAESAgent* agent, void* behaviour, void* pvParameters) {
 	if (xTaskGetCurrentTaskHandle() == 0)
 	{
@@ -246,6 +261,9 @@ void agent_initConParamFunction(Agent_Platform* platform, MAESAgent* agent, void
 	}
 };
 
+//Agent Search Function: This function searches for an agent in the platform. 
+//Inputs: The Platform instance itself and the agent AID.
+//Outputs: A bool value that indicates if the agent was found in the platform.
 bool agent_searchFunction(Agent_Platform* platform, Agent_AID aid) {
 	for (MAESUBaseType_t i = 0; i < platform->description.subscribers; i++)
 	{
@@ -257,17 +275,27 @@ bool agent_searchFunction(Agent_Platform* platform, Agent_AID aid) {
 	return false;
 };
 
+//Agent Wait Function: This function creates a FreeRTOS delay. 
+//Inputs: The Platform instance itself, the agent and the amount of ticks of delay.
+//Outputs: None.
 void agent_waitFunction(Agent_Platform* platform, MAESTickType_t ticks) {
 	vTaskDelay(ticks);
 };
 
+//Agent Yield Function: This function stops the execution of the program. 
+//Inputs: The Platform instance itself.
+//Outputs: None.
 void agent_yieldFunction(Agent_Platform* platform) {
 	taskYIELD();
 };
 
+//Get Running Agent Function: This function indicates the agent that is currently executing its task. 
+//Inputs: The Platform instance itself.
+//Outputs: None.
 Agent_AID get_running_agentFunction(Agent_Platform* platform) {
 	return xTaskGetCurrentTaskHandle();
 };
+
 
 #ifdef tskKERNEL_VERSION_MAJOR
 AGENT_MODE get_stateFunction(Agent_Platform* platform, Agent_AID aid) {
@@ -300,16 +328,25 @@ AGENT_MODE get_stateFunction(Agent_Platform* platform, Agent_AID aid) {
 };
 #endif
 
+//Get Agent Description Function: This function indicates the description of an specific agent. 
+//Inputs: The Platform instance itself and the agents AID.
+//Outputs: The description of the agent.
 Agent_info get_Agent_descriptionFunction(Agent_AID aid) {
 	Agent_AID test = aid;
 	MAESAgent* a = (MAESAgent*)env.get_taskEnv(&env, aid);
 	return a->agent;
 };
 
+//Get Agent Platform Description Function: This function indicates the platform's description. 
+//Inputs: The Platform instance itself.
+//Outputs: The description of the platform.
 AP_Description get_AP_descriptionFunction(Agent_Platform* platform) {
 	return platform->description;
 };
 
+//Register Agent Function: This function registers an agent into the platform. 
+//Inputs: The Platform instance itself and the agent's AID.
+//Outputs: An error code indicating if registering the agent was successful.
 ERROR_CODE register_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	if (aid == NULL)
 	{
@@ -349,6 +386,9 @@ ERROR_CODE register_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	}
 };
 
+//Deregister Agent Function: This function deregisters an agent into the platform. 
+//Inputs: The Platform instance itself and the agent's AID.
+//Outputs: An error code indicating if deregistering the agent was successful.
 ERROR_CODE deregister_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	if (uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -381,6 +421,9 @@ ERROR_CODE deregister_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	return NO_ERRORS;
 };
 
+//Kill Agent Function: This function kills an agent into the platform. 
+//Inputs: The Platform instance itself and the agent's AID.
+//Outputs: An error code indicating if killing the agent was successful.
 ERROR_CODE kill_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	if (uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -409,6 +452,9 @@ ERROR_CODE kill_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	}
 };
 
+//Suspend Agent Function: This function suspend an agent into the platform. 
+//Inputs: The Platform instance itself and the agent's AID.
+//Outputs: An error code indicating if suspending the agent was successful.
 ERROR_CODE suspend_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	if (uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -428,6 +474,9 @@ ERROR_CODE suspend_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	}
 };
 
+//Resume Agent Function: This function resumes an agent into the platform. 
+//Inputs: The Platform instance itself and the agent's AID.
+//Outputs: An error code indicating if resuming the agent was successful.
 ERROR_CODE resume_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	if (uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -450,6 +499,9 @@ ERROR_CODE resume_agentFunction(Agent_Platform* platform, Agent_AID aid) {
 	}
 };
 
+//Restart Agent Function: This function restarts an agent into the platform. 
+//Inputs: The Platform instance itself and the agent's AID.
+//Outputs: None.
 void restartFunction(Agent_Platform* platform, Agent_AID aid) {
 	if (uxTaskPriorityGet(xTaskGetCurrentTaskHandle()) == configMAX_PRIORITIES - 1)
 	{
@@ -469,7 +521,9 @@ void restartFunction(Agent_Platform* platform, Agent_AID aid) {
 	}
 };
 
-
+//Agent Platform Constructor: This function assigns the class pointers to its corresponding function.
+//Inputs: Ponter to the Agent Platform class.
+//Outputs: None.
 void ConstructorAgent_Platform(Agent_Platform* platform, sysVars* env) {
 	platform->ptr_env = env;
 	platform->Agent_Platform = &Agent_PlatformFunction;
@@ -481,9 +535,14 @@ void ConstructorAgent_Platform(Agent_Platform* platform, sysVars* env) {
 	platform->agent_wait = &agent_waitFunction;
 	platform->agent_yield = &agent_yieldFunction;
 	platform->get_running_agent = &get_running_agentFunction;
+	
+	
 	#ifdef tskKERNEL_VERSION_MAJOR
 	platform->get_state = &get_stateFunction;
 	#endif
+	
+	
+	
 	platform->get_Agent_description = &get_Agent_descriptionFunction;
 	platform->get_AP_description = &get_AP_descriptionFunction;
 	platform->register_agent = &register_agentFunction;
